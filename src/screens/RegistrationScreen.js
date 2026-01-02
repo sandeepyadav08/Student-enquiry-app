@@ -19,13 +19,13 @@ const RegistrationScreen = ({ navigation, route }) => {
   
   const [formData, setFormData] = useState({
     registrationNo: '',
-    studentName: enquiryData?.studentName || '',
+    studentName: enquiryData?.student_name || '',
     parentHusbandName: '',
     parentHusbandOccupation: '',
-    courseAdmissionSought: enquiryData?.courseEnquiry || '',
+    courseAdmissionSought: enquiryData?.course || '',
     dob: '',
     address: '',
-    contactNo: enquiryData?.contactNumber || '',
+    contactNo: enquiryData?.contact_number || '',
     guardianContactNo: '',
     email: '',
     category: [],

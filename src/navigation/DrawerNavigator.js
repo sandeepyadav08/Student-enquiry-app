@@ -16,11 +16,6 @@ const CustomDrawerContent = ({ navigation }) => {
   const menuItems = [
     {
       title: 'Student Enquiry',
-      icon: 'person-add-outline',
-      onPress: () => navigation.navigate('StudentEnquiry'),
-    },
-    {
-      title: 'Enquiry List',
       icon: 'list-outline',
       onPress: () => navigation.navigate('EnquiryList'),
     },

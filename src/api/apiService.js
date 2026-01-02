@@ -34,29 +34,56 @@ class ApiService {
     }
   }
 
+  cleanJsonString(text) {
+    if (!text) return '';
+    return text
+      .replace(/^\uFEFF/, '') // Remove BOM
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .trim();
+  }
+
   async makeRequest(endpoint, options = {}) {
     const token = await this.getToken();
     
+    const headers = {
+      'Accept': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    };
+
+    let body = options.body;
+    if (body instanceof URLSearchParams) {
+      body = body.toString();
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+    } else if (body && !(body instanceof FormData) && typeof body !== 'string') {
+      body = JSON.stringify(body);
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+    }
+
     const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
       ...options,
+      headers,
+      body,
     };
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, config);
+      const text = await response.text();
+      const cleanText = this.cleanJsonString(text);
       
-      const contentType = response.headers.get('content-type');
       let data;
-      
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        data = { message: `Server returned non-JSON response: ${text.substring(0, 100)}...` };
+      try {
+        data = JSON.parse(cleanText);
+      } catch (e) {
+        console.error('JSON Parse Error in makeRequest:', e, 'Clean Text:', cleanText);
+        data = { message: `Server returned invalid JSON: ${cleanText.substring(0, 100)}...` };
       }
       
       if (!response.ok) {
@@ -84,25 +111,16 @@ class ApiService {
       });
       
       const text = await response.text();
-      
-      // Remove BOM and decode HTML entities
-      const cleanText = text
-        .replace(/^\uFEFF/, '') // Remove BOM
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
+      const cleanText = this.cleanJsonString(text);
       
       let data;
       try {
         data = JSON.parse(cleanText);
       } catch (e) {
+        console.error('JSON Parse Error in login:', e, 'Clean Text:', cleanText);
         if (!response.ok) {
            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        // If it's a success 200 but not valid JSON (unexpected), handle gracefully if needed, 
-        // but user says success is JSON.
       }
 
       if (!response.ok) {
@@ -124,14 +142,47 @@ class ApiService {
 
   // Enquiry APIs
   async createEnquiry(enquiryData) {
-    return this.makeRequest('/enquiry/create', {
+    const formData = new FormData();
+    Object.keys(enquiryData).forEach(key => {
+      formData.append(key, enquiryData[key] !== null && enquiryData[key] !== undefined ? enquiryData[key] : '');
+    });
+    formData.append('app', 'true');
+
+    return this.makeRequest('/enquiry/true', {
       method: 'POST',
-      body: JSON.stringify(enquiryData),
+      body: formData,
     });
   }
 
   async getEnquiries() {
-    return this.makeRequest('/enquiry/list');
+    return this.makeRequest('/enquiry-list/true');
+  }
+
+  async getEnquiryDetails(id) {
+    
+    return this.makeRequest(`/enquiry/${id}`);
+  }
+
+  async updateEnquiry(id, enquiryData) {
+    const params = new URLSearchParams();
+    Object.keys(enquiryData).forEach(key => {
+      params.append(key, enquiryData[key] !== null && enquiryData[key] !== undefined ? enquiryData[key] : '');
+    });
+    // The backend might need the ID in the body as well
+    params.append('id', id);
+    params.append('app', 'true');
+
+    return this.makeRequest(`/enquiry/${id}`, {
+      method: 'PUT',
+      body: params,
+    });
+  }
+  async getCourses() {
+    return this.makeRequest('/course-list');
+  }
+
+  async getFranchisees() {
+    return this.makeRequest('/franchisee-list');
   }
 
   // Registration APIs
@@ -162,14 +213,7 @@ class ApiService {
       });
 
       const text = await response.text();
-       // Remove BOM and decode HTML entities
-      const cleanText = text
-        .replace(/^\uFEFF/, '') // Remove BOM
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
+      const cleanText = this.cleanJsonString(text);
 
       let data;
       try {
@@ -208,14 +252,7 @@ class ApiService {
       });
 
       const text = await response.text();
-      // Remove BOM and decode HTML entities
-      const cleanText = text
-        .replace(/^\uFEFF/, '') // Remove BOM
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
+      const cleanText = this.cleanJsonString(text);
 
        let data;
       try {
@@ -253,14 +290,7 @@ class ApiService {
       });
       
       const text = await response.text();
-       // Remove BOM and decode HTML entities
-      const cleanText = text
-        .replace(/^\uFEFF/, '') // Remove BOM
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
+      const cleanText = this.cleanJsonString(text);
 
       let data;
       try {

@@ -13,44 +13,100 @@ import CustomButton from '../components/CustomButton';
 import CustomPicker from '../components/CustomPicker';
 import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
+import { useEffect } from 'react';
 
-const StudentEnquiryScreen = ({ navigation }) => {
+const StudentEnquiryScreen = ({ navigation, route }) => {
+  const { editData } = route.params || {};
+  
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    studentName: '',
-    contactNumber: '',
-    whatsappNumber: '',
-    courseEnquiry: '',
-    modeOfReference: '',
-    place: '',
-    counsellorName: '',
-    franchisee: '',
-    remarks: '',
-    followUp1: '',
-    followUp2: '',
-    followUp3: '',
+    date: editData?.enquiry_date || new Date().toISOString().split('T')[0],
+    studentName: editData?.student_name || '',
+    contactNumber: editData?.contact_number || '',
+    whatsappNumber: editData?.whatsapp_number || '',
+    courseEnquiry: editData?.course || '',
+    modeOfReference: editData?.reference_mode || '',
+    place: editData?.place || '',
+    counsellorName: editData?.counsellor_name || '',
+    franchisee: editData?.franchisee || '',
+    remarks: editData?.remarks || '',
+    followUp1: editData?.follow_up_1 || '',
+    followUp2: editData?.follow_up_2 || '',
+    followUp3: editData?.follow_up_3 || '',
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [franchisees, setFranchisees] = useState([]);
 
-  const courseOptions = [
-    { label: 'UPSC', value: 'UPSC' },
-    { label: 'RAS', value: 'RAS' },
-    { label: 'SSC', value: 'SSC' },
-    { label: 'BANK', value: 'BANK' },
-    { label: 'Combo (B+S)', value: 'Combo (B+S)' },
-    { label: 'Master Batch', value: 'Master Batch' },
-    { label: 'CLAT', value: 'CLAT' },
-    { label: 'Other', value: 'Other' },
-  ];
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        date: editData.enquiry_date || new Date().toISOString().split('T')[0],
+        studentName: editData.student_name || '',
+        contactNumber: editData.contact_number || '',
+        whatsappNumber: editData.whatsapp_number || '',
+        courseEnquiry: editData.course || '',
+        modeOfReference: editData.reference_mode || '',
+        place: editData.place || '',
+        counsellorName: editData.counsellor_name || '',
+        franchisee: editData.franchisee || '',
+        remarks: editData.remarks || '',
+        followUp1: editData.follow_up_1 || '',
+        followUp2: editData.follow_up_2 || '',
+        followUp3: editData.follow_up_3 || '',
+      });
+    } else {
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        studentName: '',
+        contactNumber: '',
+        whatsappNumber: '',
+        courseEnquiry: '',
+        modeOfReference: '',
+        place: '',
+        counsellorName: '',
+        franchisee: '',
+        remarks: '',
+        followUp1: '',
+        followUp2: '',
+        followUp3: '',
+      });
+    }
+  }, [editData]);
 
-  const franchiseeOptions = [
-    { label: 'KS Academy', value: 'KS Academy' },
-    { label: 'RS Academy', value: 'RS Academy' },
-    { label: 'RPS Academy', value: 'RPS Academy' },
-    { label: 'NS Academy', value: 'NS Academy' },
-  ];
+  useEffect(() => {
+    fetchDropdownData();
+  }, []);
+
+  const fetchDropdownData = async () => {
+    try {
+      const [courseRes, franchiseeRes] = await Promise.all([
+        ApiService.getCourses(),
+        ApiService.getFranchisees()
+      ]);
+      
+      if (courseRes.data) {
+        const courseItems = courseRes.data.map(item => ({
+          label: item.course_name || item.name || item,
+          value: item.course_name || item.name || item
+        }));
+        setCourses(courseItems);
+      }
+
+      if (franchiseeRes.data) {
+        const franchiseeItems = franchiseeRes.data.map(item => ({
+          label: item.franchisee_name || item.name || item,
+          value: item.franchisee_name || item.name || item
+        }));
+        setFranchisees(franchiseeItems);
+      }
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+    }
+  };
+
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -86,10 +142,33 @@ const StudentEnquiryScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await ApiService.createEnquiry(formData);
-      Alert.alert('Success', 'Enquiry created successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      const submissionData = {
+        enquiry_date: formData.date,
+        student_name: formData.studentName,
+        contact_number: formData.contactNumber,
+        whatsapp_number: formData.whatsappNumber || '',
+        course: formData.courseEnquiry,
+        reference_mode: formData.modeOfReference || '',
+        place: formData.place || '',
+        counsellor_name: formData.counsellorName || '',
+        franchisee: formData.franchisee,
+        remarks: formData.remarks || '',
+        follow_up_1: formData.followUp1 || '',
+        follow_up_2: formData.followUp2 || '',
+        follow_up_3: formData.followUp3 || '',
+      };
+
+      if (editData?.id) {
+        await ApiService.updateEnquiry(editData.id, submissionData);
+        Alert.alert('Success', 'Enquiry updated successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        await ApiService.createEnquiry(submissionData);
+        Alert.alert('Success', 'Enquiry created successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      }
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to create enquiry');
     } finally {
@@ -113,7 +192,7 @@ const StudentEnquiryScreen = ({ navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Enquiry</Text>
+        <Text style={styles.headerTitle}>{editData ? 'Edit Enquiry' : 'Student Enquiry'}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -156,7 +235,7 @@ const StudentEnquiryScreen = ({ navigation }) => {
             label="Course for Enquiry *"
             selectedValue={formData.courseEnquiry}
             onValueChange={(value) => updateFormData('courseEnquiry', value)}
-            items={courseOptions}
+            items={courses}
             placeholder="Select course"
             error={errors.courseEnquiry}
           />
@@ -186,7 +265,7 @@ const StudentEnquiryScreen = ({ navigation }) => {
             label="Franchisee *"
             selectedValue={formData.franchisee}
             onValueChange={(value) => updateFormData('franchisee', value)}
-            items={franchiseeOptions}
+            items={franchisees}
             placeholder="Select franchisee"
             error={errors.franchisee}
           />
@@ -221,7 +300,7 @@ const StudentEnquiryScreen = ({ navigation }) => {
           />
 
           <CustomButton
-            title="Submit Enquiry"
+            title={editData ? "Update Enquiry" : "Submit Enquiry"}
             onPress={handleSubmit}
             loading={loading}
             style={styles.submitButton}

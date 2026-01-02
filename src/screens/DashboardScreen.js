@@ -13,9 +13,9 @@ const DashboardScreen = ({ navigation }) => {
   const menuItems = [
     {
       title: 'Student Enquiry',
-      icon: 'person-add',
-      onPress: () => navigation.navigate('StudentEnquiry'),
-      color: COLORS.success,
+      icon: 'list',
+      onPress: () => navigation.navigate('EnquiryList'),
+      color: COLORS.stats,
     },
     {
       title: 'Registration',
@@ -28,12 +28,6 @@ const DashboardScreen = ({ navigation }) => {
       icon: 'card',
       onPress: () => navigation.navigate('FeesEntry'),
       color: COLORS.warning,
-    },
-    {
-      title: 'Enquiry List',
-      icon: 'list',
-      onPress: () => navigation.navigate('EnquiryList'),
-      color: COLORS.stats,
     },
   ];
 

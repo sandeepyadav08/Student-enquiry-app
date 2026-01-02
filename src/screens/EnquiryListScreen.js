@@ -6,6 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Modal,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
@@ -17,10 +20,16 @@ const EnquiryListScreen = ({ navigation }) => {
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
-    fetchEnquiries();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchEnquiries();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     filterEnquiries();
@@ -37,6 +46,25 @@ const EnquiryListScreen = ({ navigation }) => {
     }
   };
 
+  const handleViewDetails = async (id) => {
+    setLoadingDetails(true);
+    setDetailsModalVisible(true);
+    try {
+      const response = await ApiService.getEnquiryDetails(id);
+      setSelectedEnquiry(response.data);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch enquiry details');
+      setDetailsModalVisible(false);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleEditEnquiry = () => {
+    setDetailsModalVisible(false);
+    navigation.navigate('StudentEnquiry', { editData: selectedEnquiry });
+  };
+
   const filterEnquiries = () => {
     if (!searchQuery.trim()) {
       setFilteredEnquiries(enquiries);
@@ -44,8 +72,8 @@ const EnquiryListScreen = ({ navigation }) => {
     }
 
     const filtered = enquiries.filter(enquiry =>
-      enquiry.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enquiry.contactNumber.includes(searchQuery)
+      enquiry.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      enquiry.contact_number.includes(searchQuery)
     );
     setFilteredEnquiries(filtered);
   };
@@ -60,19 +88,19 @@ const EnquiryListScreen = ({ navigation }) => {
       onPress={() => handleEnquiryPress(item)}
     >
       <View style={styles.enquiryHeader}>
-        <Text style={styles.studentName}>{item.studentName}</Text>
-        <Text style={styles.date}>{item.date}</Text>
+        <Text style={styles.studentName}>{item.student_name}</Text>
+        <Text style={styles.date}>{item.enquiry_date}</Text>
       </View>
       
       <View style={styles.enquiryDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="call" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>{item.contactNumber}</Text>
+          <Text style={styles.detailText}>{item.contact_number}</Text>
         </View>
         
         <View style={styles.detailRow}>
           <Ionicons name="school" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>{item.courseEnquiry}</Text>
+          <Text style={styles.detailText}>{item.course}</Text>
         </View>
         
         <View style={styles.detailRow}>
@@ -82,8 +110,17 @@ const EnquiryListScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.enquiryFooter}>
-        <Text style={styles.counsellor}>Counsellor: {item.counsellorName || 'N/A'}</Text>
-        <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
+        <View style={styles.footerInfo}>
+          <Text style={styles.counsellor}>Counsellor: {item.counsellor_name || 'N/A'}</Text>
+        </View>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            onPress={() => handleViewDetails(item.id)}
+            style={styles.iconButton}
+          >
+            <Ionicons name="eye-outline" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -109,7 +146,7 @@ const EnquiryListScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Enquiry List</Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('StudentEnquiry')}
+          onPress={() => navigation.navigate('StudentEnquiry', { editData: null })}
           style={styles.addButton}
         >
           <Ionicons name="add" size={24} color={COLORS.primary} />
@@ -135,6 +172,96 @@ const EnquiryListScreen = ({ navigation }) => {
         onRefresh={fetchEnquiries}
         ListEmptyComponent={renderEmptyState}
       />
+
+      <Modal
+        visible={detailsModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDetailsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Enquiry Details</Text>
+              <TouchableOpacity onPress={() => setDetailsModalVisible(false)}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            {loadingDetails ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+              </View>
+            ) : selectedEnquiry && (
+              <>
+                <ScrollView style={styles.detailsScroll}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Student Name</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.student_name}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Date</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.enquiry_date}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Contact Number</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.contact_number}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>WhatsApp Number</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.whatsapp_number || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Course</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.course}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Franchisee</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.franchisee}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Mode of Reference</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.reference_mode || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Counsellor</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.counsellor_name || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Place</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.place || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Remarks</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.remarks || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Follow Up 1</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_1 || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Follow Up 2</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_2 || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Follow Up 3</Text>
+                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_3 || 'N/A'}</Text>
+                  </View>
+                </ScrollView>
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={handleEditEnquiry}
+                  >
+                    <Ionicons name="create-outline" size={20} color={COLORS.white} />
+                    <Text style={styles.editButtonText}>Edit Details</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -235,6 +362,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.disabledInput,
   },
+  footerInfo: {
+    flex: 1,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconButton: {
+    padding: 4,
+  },
   counsellor: {
     fontSize: 12,
     color: COLORS.textSecondary,
@@ -257,6 +395,73 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.placeholder,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '85%',
+    width: '100%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.disabledInput,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  modalLoading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  detailsScroll: {
+    padding: 24,
+  },
+  detailItem: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  detailValue: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  modalFooter: {
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.disabledInput,
+  },
+  editButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  editButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
