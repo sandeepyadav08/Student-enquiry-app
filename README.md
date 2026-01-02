@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+# 🎓 Student Enquiry App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A robust, enterprise-ready mobile solution for educational institutions to streamline their admission pipeline. Built with **React Native** and **Expo**, this application provides a seamless experience for managing student leads and registrations.
 
-## Get started
+---
 
-1. Install dependencies
+##  Core Features
 
-   ```bash
-   npm install
-   ```
+### 📋 Lead Management
 
-2. Start the app
+- **Enquiry Capture**: Intuitive forms with validation for capturing potential student data.
+- **Centralized List**: Efficiently search, filter, and track leads through their lifecycle.
 
-   ```bash
-   npx expo start
-   ```
+### 🎓 Academic Lifecycle
 
-In the output, you'll find options to open the app in a
+- **Lead Conversion**: One-tap transition from enquiry to full student registration.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 💰 Financial Tracking
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Fee Records**: Transparent entry and management of student fee status.
+- **Pending Alerts**: Quickly identify and manage outstanding payments.
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 🎨 Technology Stack
+
+| Category       | Technology                             |
+| :------------- | :------------------------------------- |
+| **Frontend**   | React Native, Expo SDK                 |
+| **Navigation** | React Navigation (Drawer, Tabs, Stack) |
+| **Icons**      | Expo Vector Icons (Ionicons)           |
+| **Styling**    | Centralized Theme (JS-based Constants) |
+
+---
+
+## 🏗 Folder Architecture
 
 ```bash
-npm run reset-project
+Student-Enquiry/
+├── assets/             # Raw assets (images, logos, fonts)
+├── src/
+│   ├── api/            # Service layer for backend communication
+│   ├── components/     # Reusable atomic UI components
+│   ├── constants/      # App-wide configuration (Colors, Keys)
+│   ├── navigation/     # Routing and navigation logic
+│   └── screens/        # Main feature screens (Views)
+├── app.json            # Expo configuration
+└── package.json        # Dependencies and scripts
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## ⚙️ Getting Started
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
+1.  **Install dependencies**
 
-## Join the community
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-Join our community of developers creating universal apps.
+2.  **Start the development server**
+    ```bash
+    npx expo start
+    ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+Maintained and developed by Sandee Yadav — React Native Developer._

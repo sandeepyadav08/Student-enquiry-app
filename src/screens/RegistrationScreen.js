@@ -1,0 +1,418 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import CustomInput from '../components/CustomInput';
+import CustomButton from '../components/CustomButton';
+import CustomPicker from '../components/CustomPicker';
+import ApiService from '../api/apiService';
+import COLORS from '../constants/colors';
+
+const RegistrationScreen = ({ navigation, route }) => {
+  const { enquiryData } = route.params || {};
+  
+  const [formData, setFormData] = useState({
+    registrationNo: '',
+    studentName: enquiryData?.studentName || '',
+    parentHusbandName: '',
+    parentHusbandOccupation: '',
+    courseAdmissionSought: enquiryData?.courseEnquiry || '',
+    dob: '',
+    address: '',
+    contactNo: enquiryData?.contactNumber || '',
+    guardianContactNo: '',
+    email: '',
+    category: [],
+    computerCourse: '',
+    medium: [],
+    dateOfRegistration: new Date().toISOString().split('T')[0],
+    registrationFees: '',
+  });
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const categoryOptions = [
+    { label: 'General', value: 'General' },
+    { label: 'OBC', value: 'OBC' },
+    { label: 'SC', value: 'SC' },
+    { label: 'ST', value: 'ST' },
+    { label: 'EWS', value: 'EWS' },
+    { label: 'Ex-Serviceman', value: 'Ex-Serviceman' },
+    { label: 'PH', value: 'PH' },
+  ];
+
+  const mediumOptions = [
+    { label: 'Hindi', value: 'Hindi' },
+    { label: 'English', value: 'English' },
+  ];
+
+  useEffect(() => {
+    // Auto-fetch registration number from backend
+    fetchRegistrationNumber();
+  }, []);
+
+  const fetchRegistrationNumber = async () => {
+    try {
+      // Simulate API call to get next registration number
+      const regNo = `REG${Date.now().toString().slice(-6)}`;
+      setFormData(prev => ({ ...prev, registrationNo: regNo }));
+    } catch (error) {
+      console.error('Error fetching registration number:', error);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.studentName.trim()) {
+      newErrors.studentName = 'Student name is required';
+    }
+
+    if (!formData.parentHusbandName.trim()) {
+      newErrors.parentHusbandName = 'Parent/Husband name is required';
+    }
+
+    if (!formData.courseAdmissionSought.trim()) {
+      newErrors.courseAdmissionSought = 'Course is required';
+    }
+
+    if (!formData.dob.trim()) {
+      newErrors.dob = 'Date of birth is required';
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    }
+
+    if (!formData.contactNo.trim()) {
+      newErrors.contactNo = 'Contact number is required';
+    } else if (!/^\d{10}$/.test(formData.contactNo)) {
+      newErrors.contactNo = 'Contact number must be 10 digits';
+    }
+
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+
+    if (!formData.registrationFees.trim()) {
+      newErrors.registrationFees = 'Registration fees is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      await ApiService.createRegistration(formData);
+      Alert.alert('Success', 'Registration created successfully', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to create registration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const toggleCategory = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      category: prev.category.includes(category)
+        ? prev.category.filter(c => c !== category)
+        : [...prev.category, category]
+    }));
+  };
+
+  const toggleMedium = (medium) => {
+    setFormData(prev => ({
+      ...prev,
+      medium: prev.medium.includes(medium)
+        ? prev.medium.filter(m => m !== medium)
+        : [...prev.medium, medium]
+    }));
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Registration</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.form}>
+          <CustomInput
+            label="Registration No"
+            value={formData.registrationNo}
+            editable={false}
+            style={styles.disabledInputStyle}
+          />
+
+          <CustomInput
+            label="Student Name *"
+            value={formData.studentName}
+            onChangeText={(value) => updateFormData('studentName', value)}
+            placeholder="Enter student name"
+            editable={!enquiryData}
+            error={errors.studentName}
+          />
+
+          <CustomInput
+            label="Parent/Husband Name *"
+            value={formData.parentHusbandName}
+            onChangeText={(value) => updateFormData('parentHusbandName', value)}
+            placeholder="Enter parent/husband name"
+            error={errors.parentHusbandName}
+          />
+
+          <CustomInput
+            label="Parent/Husband Occupation"
+            value={formData.parentHusbandOccupation}
+            onChangeText={(value) => updateFormData('parentHusbandOccupation', value)}
+            placeholder="Enter occupation"
+          />
+
+          <CustomInput
+            label="Course in which admission sought *"
+            value={formData.courseAdmissionSought}
+            onChangeText={(value) => updateFormData('courseAdmissionSought', value)}
+            placeholder="Enter course"
+            error={errors.courseAdmissionSought}
+          />
+
+          <CustomInput
+            label="Date of Birth *"
+            value={formData.dob}
+            onChangeText={(value) => updateFormData('dob', value)}
+            placeholder="YYYY-MM-DD"
+            error={errors.dob}
+          />
+
+          <CustomInput
+            label="Address *"
+            value={formData.address}
+            onChangeText={(value) => updateFormData('address', value)}
+            placeholder="Enter address"
+            multiline
+            error={errors.address}
+          />
+
+          <CustomInput
+            label="Contact No *"
+            value={formData.contactNo}
+            onChangeText={(value) => updateFormData('contactNo', value)}
+            placeholder="Enter 10-digit contact number"
+            keyboardType="numeric"
+            editable={!enquiryData}
+            error={errors.contactNo}
+          />
+
+          <CustomInput
+            label="Guardian Contact No"
+            value={formData.guardianContactNo}
+            onChangeText={(value) => updateFormData('guardianContactNo', value)}
+            placeholder="Enter guardian contact number"
+            keyboardType="numeric"
+          />
+
+          <CustomInput
+            label="Email"
+            value={formData.email}
+            onChangeText={(value) => updateFormData('email', value)}
+            placeholder="Enter email address"
+            keyboardType="email-address"
+            error={errors.email}
+            autoCapitalize="none"
+          />
+
+          <View style={styles.checkboxSection}>
+            <Text style={styles.sectionTitle}>Category</Text>
+            <View style={styles.checkboxContainer}>
+              {categoryOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={styles.checkboxItem}
+                  onPress={() => toggleCategory(option.value)}
+                >
+                  <View style={[
+                    styles.checkbox,
+                    formData.category.includes(option.value) && styles.checkedBox
+                  ]}>
+                    {formData.category.includes(option.value) && (
+                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                    )}
+                  </View>
+                  <Text style={styles.checkboxLabel}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <CustomInput
+            label="Computer Course"
+            value={formData.computerCourse}
+            onChangeText={(value) => updateFormData('computerCourse', value)}
+            placeholder="Enter computer course"
+          />
+
+          <View style={styles.checkboxSection}>
+            <Text style={styles.sectionTitle}>Medium</Text>
+            <View style={styles.checkboxContainer}>
+              {mediumOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={styles.checkboxItem}
+                  onPress={() => toggleMedium(option.value)}
+                >
+                  <View style={[
+                    styles.checkbox,
+                    formData.medium.includes(option.value) && styles.checkedBox
+                  ]}>
+                    {formData.medium.includes(option.value) && (
+                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                    )}
+                  </View>
+                  <Text style={styles.checkboxLabel}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <CustomInput
+            label="Date of Registration"
+            value={formData.dateOfRegistration}
+            onChangeText={(value) => updateFormData('dateOfRegistration', value)}
+            placeholder="YYYY-MM-DD"
+          />
+
+          <CustomInput
+            label="Registration Fees *"
+            value={formData.registrationFees}
+            onChangeText={(value) => updateFormData('registrationFees', value)}
+            placeholder="Enter registration fees"
+            keyboardType="numeric"
+            error={errors.registrationFees}
+          />
+
+          <CustomButton
+            title="Create Registration"
+            onPress={handleSubmit}
+            loading={loading}
+            style={styles.submitButton}
+          />
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.screenBackground,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 20,
+    backgroundColor: COLORS.white,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+  },
+  form: {
+    padding: 20,
+  },
+  disabledInputStyle: {
+    opacity: 0.7,
+  },
+  checkboxSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 12,
+    color: COLORS.text,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  checkboxItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    minWidth: '45%',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderRadius: 4,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkedBox: {
+    backgroundColor: COLORS.primary,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  submitButton: {
+    marginTop: 20,
+    marginBottom: 40,
+  },
+});
+
+export default RegistrationScreen;
