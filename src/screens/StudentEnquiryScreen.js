@@ -137,6 +137,14 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleBack = () => {
+    if (editData) {
+      navigation.navigate('EnquiryList');
+    } else {
+      navigation.goBack();
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -161,12 +169,12 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
       if (editData?.id) {
         await ApiService.updateEnquiry(editData.id, submissionData);
         Alert.alert('Success', 'Enquiry updated successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() }
+          { text: 'OK', onPress: () => handleBack() }
         ]);
       } else {
         await ApiService.createEnquiry(submissionData);
         Alert.alert('Success', 'Enquiry created successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() }
+          { text: 'OK', onPress: () => handleBack() }
         ]);
       }
     } catch (error) {
@@ -187,7 +195,7 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={handleBack}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />

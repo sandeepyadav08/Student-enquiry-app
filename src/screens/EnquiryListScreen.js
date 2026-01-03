@@ -78,14 +78,11 @@ const EnquiryListScreen = ({ navigation }) => {
     setFilteredEnquiries(filtered);
   };
 
-  const handleEnquiryPress = (enquiry) => {
-    navigation.navigate('Registration', { enquiryData: enquiry });
-  };
+
 
   const renderEnquiryItem = ({ item }) => (
-    <TouchableOpacity
+    <View
       style={styles.enquiryCard}
-      onPress={() => handleEnquiryPress(item)}
     >
       <View style={styles.enquiryHeader}>
         <Text style={styles.studentName}>{item.student_name}</Text>
@@ -122,7 +119,7 @@ const EnquiryListScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderEmptyState = () => (
