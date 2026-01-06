@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,10 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Platform,
+  Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
@@ -15,7 +18,7 @@ import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
 
 const RegistrationScreen = ({ navigation, route }) => {
-  const { enquiryData } = route.params || {};
+  const { enquiryData, editData, timestamp } = route.params || {};
   
   const [formData, setFormData] = useState({
     registrationNo: '',
@@ -23,20 +26,23 @@ const RegistrationScreen = ({ navigation, route }) => {
     parentHusbandName: '',
     parentHusbandOccupation: '',
     courseAdmissionSought: enquiryData?.course || '',
-    dob: '',
+    dob: null,
     address: '',
     contactNo: enquiryData?.contact_number || '',
     guardianContactNo: '',
     email: '',
-    category: [],
+    category: '',
     computerCourse: '',
-    medium: [],
-    dateOfRegistration: new Date().toISOString().split('T')[0],
+    medium: '',
+    dateOfRegistration: new Date(),
     registrationFees: '',
   });
 
+  const [activeDateField, setActiveDateField] = useState(null);
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const scrollViewRef = useRef(null);
 
   const categoryOptions = [
     { label: 'General', value: 'General' },
@@ -54,15 +60,38 @@ const RegistrationScreen = ({ navigation, route }) => {
   ];
 
   useEffect(() => {
-    // Auto-fetch registration number from backend
-    fetchRegistrationNumber();
-  }, []);
+    if (editData) {
+      setFormData({
+        registrationNo: editData.registration_no || '',
+        studentName: editData.student_name || '',
+        parentHusbandName: editData.parent_husband_name || '',
+        parentHusbandOccupation: editData.parent_husband_occupation || '',
+        courseAdmissionSought: editData.course_admission_sought || editData.course || '',
+        dob: editData.dob ? new Date(editData.dob) : null,
+        address: editData.address || '',
+        contactNo: editData.contact_no || editData.contact_number || '',
+        guardianContactNo: editData.guardian_contact_no || '',
+        email: editData.email || '',
+        category: typeof editData.category === 'string' ? editData.category : (editData.category?.[0] || ''),
+        computerCourse: editData.computer_course || '',
+        medium: typeof editData.medium === 'string' ? editData.medium : (editData.medium?.[0] || ''),
+        dateOfRegistration: editData.date_of_registration ? new Date(editData.date_of_registration) : new Date(),
+        registrationFees: editData.registration_fees?.toString() || '',
+      });
+    } else {
+      resetForm();
+      fetchRegistrationNumber();
+      // Scroll to top when form opens
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+      }, 100);
+    }
+  }, [editData, enquiryData, timestamp]);
 
   const fetchRegistrationNumber = async () => {
     try {
-      // Simulate API call to get next registration number
-      const regNo = `REG${Date.now().toString().slice(-6)}`;
-      setFormData(prev => ({ ...prev, registrationNo: regNo }));
+      const response = await ApiService.getRegistrationNumber();
+      setFormData(prev => ({ ...prev, registrationNo: response.data }));
     } catch (error) {
       console.error('Error fetching registration number:', error);
     }
@@ -83,7 +112,7 @@ const RegistrationScreen = ({ navigation, route }) => {
       newErrors.courseAdmissionSought = 'Course is required';
     }
 
-    if (!formData.dob.trim()) {
+    if (!formData.dob) {
       newErrors.dob = 'Date of birth is required';
     }
 
@@ -109,20 +138,80 @@ const RegistrationScreen = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleBack = () => {
+    navigation.navigate('RegistrationList');
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      await ApiService.createRegistration(formData);
-      Alert.alert('Success', 'Registration created successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      const submissionData = {
+        registration_no: formData.registrationNo,
+        student_name: formData.studentName,
+        guardian_name: formData.parentHusbandName,
+        guardian_occupation: formData.parentHusbandOccupation,
+        course: formData.courseAdmissionSought,
+        dob: formData.dob ? formData.dob.toISOString().split('T')[0] : '',
+        address: formData.address,
+        contact_no: formData.contactNo,
+        guardian_contact_no: formData.guardianContactNo,
+        email: formData.email,
+        category: formData.category,
+        computer_course: formData.computerCourse,
+        medium: formData.medium,
+        registration_date: formData.dateOfRegistration.toISOString().split('T')[0],
+        registration_fees: formData.registrationFees,
+      };
+
+      if (editData?.id) {
+        await ApiService.updateRegistration(editData.id, submissionData);
+        Alert.alert('Success', 'Registration updated successfully', [
+          { text: 'OK', onPress: () => handleBack() }
+        ]);
+      } else {
+        await ApiService.createRegistration(submissionData);
+        Alert.alert('Success', 'Registration created successfully', [
+          { text: 'OK', onPress: () => handleBack() }
+        ]);
+      }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to create registration');
+      Alert.alert('Error', error.message || 'Failed to save registration');
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      registrationNo: '',
+      studentName: enquiryData?.student_name || '',
+      parentHusbandName: '',
+      parentHusbandOccupation: '',
+      courseAdmissionSought: enquiryData?.course || '',
+      dob: null,
+      address: '',
+      contactNo: enquiryData?.contact_number || '',
+      guardianContactNo: '',
+      email: '',
+      category: '',
+      computerCourse: '',
+      medium: '',
+      dateOfRegistration: new Date(),
+      registrationFees: '',
+    });
+    setErrors({});
+  };
+
+  const handleContactInput = (field, value) => {
+    const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    updateFormData(field, numericValue);
+  };
+
+  const handleNumericInput = (field, value) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    updateFormData(field, numericValue);
   };
 
   const updateFormData = (field, value) => {
@@ -135,35 +224,46 @@ const RegistrationScreen = ({ navigation, route }) => {
   const toggleCategory = (category) => {
     setFormData(prev => ({
       ...prev,
-      category: prev.category.includes(category)
-        ? prev.category.filter(c => c !== category)
-        : [...prev.category, category]
+      category: prev.category === category ? '' : category
     }));
   };
 
   const toggleMedium = (medium) => {
     setFormData(prev => ({
       ...prev,
-      medium: prev.medium.includes(medium)
-        ? prev.medium.filter(m => m !== medium)
-        : [...prev.medium, medium]
+      medium: prev.medium === medium ? '' : medium
     }));
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    // On Android, the picker closes automatically.
+    if (Platform.OS === 'android') {
+      setActiveDateField(null);
+    }
+    
+    if (selectedDate && activeDateField) {
+      setFormData(prev => ({ ...prev, [activeDateField]: selectedDate }));
+    }
+  };
+
+  const confirmIOSDate = () => {
+    setActiveDateField(null);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={handleBack}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Registration</Text>
+        <Text style={styles.headerTitle}>{editData ? 'Edit Registration' : 'Registration'}</Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
           <CustomInput
             label="Registration No"
@@ -179,6 +279,7 @@ const RegistrationScreen = ({ navigation, route }) => {
             placeholder="Enter student name"
             editable={!enquiryData}
             error={errors.studentName}
+            autoCapitalize="words"
           />
 
           <CustomInput
@@ -187,6 +288,7 @@ const RegistrationScreen = ({ navigation, route }) => {
             onChangeText={(value) => updateFormData('parentHusbandName', value)}
             placeholder="Enter parent/husband name"
             error={errors.parentHusbandName}
+            autoCapitalize="words"
           />
 
           <CustomInput
@@ -204,13 +306,17 @@ const RegistrationScreen = ({ navigation, route }) => {
             error={errors.courseAdmissionSought}
           />
 
-          <CustomInput
-            label="Date of Birth *"
-            value={formData.dob}
-            onChangeText={(value) => updateFormData('dob', value)}
-            placeholder="YYYY-MM-DD"
-            error={errors.dob}
-          />
+          <TouchableOpacity onPress={() => setActiveDateField('dob')}>
+            <View pointerEvents="none">
+              <CustomInput
+                label="Date of Birth *"
+                value={formData.dob instanceof Date ? formData.dob.toISOString().split('T')[0] : ''}
+                editable={false}
+                placeholder="YYYY-MM-DD"
+                error={errors.dob}
+              />
+            </View>
+          </TouchableOpacity>
 
           <CustomInput
             label="Address *"
@@ -224,19 +330,21 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Contact No *"
             value={formData.contactNo}
-            onChangeText={(value) => updateFormData('contactNo', value)}
+            onChangeText={(value) => handleContactInput('contactNo', value)}
             placeholder="Enter 10-digit contact number"
             keyboardType="numeric"
             editable={!enquiryData}
             error={errors.contactNo}
+            maxLength={10}
           />
 
           <CustomInput
             label="Guardian Contact No"
             value={formData.guardianContactNo}
-            onChangeText={(value) => updateFormData('guardianContactNo', value)}
+            onChangeText={(value) => handleContactInput('guardianContactNo', value)}
             placeholder="Enter guardian contact number"
             keyboardType="numeric"
+            maxLength={10}
           />
 
           <CustomInput
@@ -260,9 +368,9 @@ const RegistrationScreen = ({ navigation, route }) => {
                 >
                   <View style={[
                     styles.checkbox,
-                    formData.category.includes(option.value) && styles.checkedBox
+                    formData.category === option.value && styles.checkedBox
                   ]}>
-                    {formData.category.includes(option.value) && (
+                    {formData.category === option.value && (
                       <Ionicons name="checkmark" size={16} color={COLORS.white} />
                     )}
                   </View>
@@ -290,9 +398,9 @@ const RegistrationScreen = ({ navigation, route }) => {
                 >
                   <View style={[
                     styles.checkbox,
-                    formData.medium.includes(option.value) && styles.checkedBox
+                    formData.medium === option.value && styles.checkedBox
                   ]}>
-                    {formData.medium.includes(option.value) && (
+                    {formData.medium === option.value && (
                       <Ionicons name="checkmark" size={16} color={COLORS.white} />
                     )}
                   </View>
@@ -302,24 +410,77 @@ const RegistrationScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          <CustomInput
-            label="Date of Registration"
-            value={formData.dateOfRegistration}
-            onChangeText={(value) => updateFormData('dateOfRegistration', value)}
-            placeholder="YYYY-MM-DD"
-          />
+          <TouchableOpacity onPress={() => setActiveDateField('dateOfRegistration')}>
+            <View pointerEvents="none">
+              <CustomInput
+                label="Date of Registration"
+                value={formData.dateOfRegistration instanceof Date ? formData.dateOfRegistration.toISOString().split('T')[0] : ''}
+                editable={false}
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+          </TouchableOpacity>
+
+          {activeDateField && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={
+                (formData[activeDateField] instanceof Date) 
+                  ? formData[activeDateField] 
+                  : new Date()
+              }
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+            />
+          )}
+
+          {Platform.OS === 'ios' && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={!!activeDateField}
+              onRequestClose={() => setActiveDateField(null)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity onPress={() => setActiveDateField(null)}>
+                      <Text style={styles.modalButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmIOSDate}>
+                      <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={
+                      (activeDateField && formData[activeDateField] instanceof Date)
+                        ? formData[activeDateField]
+                        : new Date()
+                    }
+                    mode="date"
+                    display="inline"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    style={styles.iosDatePicker}
+                    themeVariant="light"
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
 
           <CustomInput
             label="Registration Fees *"
             value={formData.registrationFees}
-            onChangeText={(value) => updateFormData('registrationFees', value)}
+            onChangeText={(value) => handleNumericInput('registrationFees', value)}
             placeholder="Enter registration fees"
             keyboardType="numeric"
             error={errors.registrationFees}
           />
 
           <CustomButton
-            title="Create Registration"
+            title={editData ? "Update Registration" : "Create Registration"}
             onPress={handleSubmit}
             loading={loading}
             style={styles.submitButton}
@@ -412,6 +573,36 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.white,
+  },
+  modalButton: {
+    color: COLORS.primary,
+    fontSize: 17,
+  },
+  doneButton: {
+    fontWeight: 'bold',
+  },
+  iosDatePicker: {
+    height: 320,
+    backgroundColor: COLORS.white,
   },
 });
 

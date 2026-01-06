@@ -21,6 +21,7 @@ const CustomInput = ({
       <TextInput
         style={[
           styles.input, 
+          multiline && styles.multilineInput,
           !editable && styles.disabledInput,
           error && styles.errorInput
         ]}
@@ -57,6 +58,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     backgroundColor: COLORS.inputBackground,
+  },
+  multilineInput: {
+    height: 100,
+    textAlignVertical: 'top',
   },
   disabledInput: {
     backgroundColor: COLORS.disabledInput,

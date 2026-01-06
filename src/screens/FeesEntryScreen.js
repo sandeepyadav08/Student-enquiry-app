@@ -6,7 +6,10 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Platform,
+  Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
@@ -17,13 +20,14 @@ import COLORS from '../constants/colors';
 const FeesEntryScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
     registrationNo: '',
-    date: new Date().toISOString().split('T')[0],
+    registrationNo: '',
+    date: new Date(),
     studentName: '',
     course: '',
     totalFees: '',
     paidFees: '',
     dueFees: '',
-    dueDate: '',
+    dueDate: null,
     paidThrough: '',
     receivedBy: '',
   });
@@ -31,6 +35,7 @@ const FeesEntryScreen = ({ navigation }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [registrationOptions, setRegistrationOptions] = useState([]);
+  const [activeDateField, setActiveDateField] = useState(null);
 
   const paymentMethods = [
     { label: 'Cash', value: 'Cash' },
@@ -165,6 +170,20 @@ const FeesEntryScreen = ({ navigation }) => {
     }
   };
 
+  const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setActiveDateField(null);
+    }
+    
+    if (selectedDate && activeDateField) {
+      setFormData(prev => ({ ...prev, [activeDateField]: selectedDate }));
+    }
+  };
+
+  const confirmIOSDate = () => {
+    setActiveDateField(null);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -189,12 +208,16 @@ const FeesEntryScreen = ({ navigation }) => {
             error={errors.registrationNo}
           />
 
-          <CustomInput
-            label="Date"
-            value={formData.date}
-            onChangeText={(value) => updateFormData('date', value)}
-            placeholder="YYYY-MM-DD"
-          />
+          <TouchableOpacity onPress={() => setActiveDateField('date')}>
+            <View pointerEvents="none">
+              <CustomInput
+                label="Date"
+                value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''}
+                editable={false}
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+          </TouchableOpacity>
 
           <CustomInput
             label="Student Name"
@@ -235,12 +258,65 @@ const FeesEntryScreen = ({ navigation }) => {
             style={styles.disabledInputStyle}
           />
 
-          <CustomInput
-            label="Due Date"
-            value={formData.dueDate}
-            onChangeText={(value) => updateFormData('dueDate', value)}
-            placeholder="YYYY-MM-DD"
-          />
+          <TouchableOpacity onPress={() => setActiveDateField('dueDate')}>
+            <View pointerEvents="none">
+              <CustomInput
+                label="Due Date"
+                value={formData.dueDate instanceof Date ? formData.dueDate.toISOString().split('T')[0] : ''}
+                editable={false}
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+          </TouchableOpacity>
+
+          {activeDateField && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={
+                (formData[activeDateField] instanceof Date) 
+                  ? formData[activeDateField] 
+                  : new Date()
+              }
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+              maximumDate={new Date()} // Optional: remove if due dates can be in future
+            />
+          )}
+
+          {Platform.OS === 'ios' && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={!!activeDateField}
+              onRequestClose={() => setActiveDateField(null)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity onPress={() => setActiveDateField(null)}>
+                      <Text style={styles.modalButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmIOSDate}>
+                      <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={
+                      (activeDateField && formData[activeDateField] instanceof Date)
+                        ? formData[activeDateField]
+                        : new Date()
+                    }
+                    mode="date"
+                    display="inline"
+                    onChange={handleDateChange}
+                    // maximumDate={new Date()} // Optional: decide if Due Date can be future
+                    style={styles.iosDatePicker}
+                    themeVariant="light"
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
 
           <CustomPicker
             label="Paid Through *"
@@ -316,6 +392,36 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.white,
+  },
+  modalButton: {
+    color: COLORS.primary,
+    fontSize: 17,
+  },
+  doneButton: {
+    fontWeight: 'bold',
+  },
+  iosDatePicker: {
+    height: 320,
+    backgroundColor: COLORS.white,
   },
 });
 

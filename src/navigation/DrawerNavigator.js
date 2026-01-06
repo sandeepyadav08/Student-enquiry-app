@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
 import StudentEnquiryScreen from '../screens/StudentEnquiryScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
+import RegistrationListScreen from '../screens/RegistrationListScreen';
 import FeesEntryScreen from '../screens/FeesEntryScreen';
 import EnquiryListScreen from '../screens/EnquiryListScreen';
 import ApiService from '../api/apiService';
@@ -22,7 +23,7 @@ const CustomDrawerContent = ({ navigation }) => {
     {
       title: 'Registration',
       icon: 'clipboard-outline',
-      onPress: () => navigation.navigate('Registration'),
+      onPress: () => navigation.navigate('RegistrationList'),
     },
     {
       title: 'Fees Entry',
@@ -76,6 +77,7 @@ const DrawerNavigator = () => {
     >
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
       <Drawer.Screen name="StudentEnquiry" component={StudentEnquiryScreen} />
+      <Drawer.Screen name="RegistrationList" component={RegistrationListScreen} />
       <Drawer.Screen name="EnquiryList" component={EnquiryListScreen} />
       <Drawer.Screen name="Registration" component={RegistrationScreen} />
       <Drawer.Screen name="FeesEntry" component={FeesEntryScreen} />

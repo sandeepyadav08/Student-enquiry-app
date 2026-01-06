@@ -187,9 +187,41 @@ class ApiService {
 
   // Registration APIs
   async createRegistration(registrationData) {
-    return this.makeRequest('/registration/create', {
+    const formData = new FormData();
+    Object.keys(registrationData).forEach(key => {
+      formData.append(key, registrationData[key] !== null && registrationData[key] !== undefined ? registrationData[key] : '');
+    });
+    formData.append('app', 'true');
+
+    return this.makeRequest('/registrations/true', {
       method: 'POST',
-      body: JSON.stringify(registrationData),
+      body: formData,
+    });
+  }
+
+  async getRegistrations() {
+    return this.makeRequest('/registrations-list/true');
+  }
+
+  async getRegistrationNumber() {
+    return this.makeRequest('/registrations/number/true');
+  }
+
+  async getRegistrationDetails(id) {
+    return this.makeRequest(`/registrations/${id}?app=true`);
+  }
+
+  async updateRegistration(id, registrationData) {
+    const params = new URLSearchParams();
+    Object.keys(registrationData).forEach(key => {
+      params.append(key, registrationData[key] !== null && registrationData[key] !== undefined ? registrationData[key] : '');
+    });
+    params.append('id', id);
+    params.append('app', 'true');
+
+    return this.makeRequest(`/registration/${id}`, {
+      method: 'PUT',
+      body: params,
     });
   }
 

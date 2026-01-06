@@ -6,7 +6,10 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Platform,
+  Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
@@ -38,11 +41,12 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [franchisees, setFranchisees] = useState([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (editData) {
       setFormData({
-        date: editData.enquiry_date || new Date().toISOString().split('T')[0],
+        date: editData.enquiry_date ? new Date(editData.enquiry_date) : new Date(),
         studentName: editData.student_name || '',
         contactNumber: editData.contact_number || '',
         whatsappNumber: editData.whatsapp_number || '',
@@ -58,7 +62,7 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
       });
     } else {
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        date: new Date(),
         studentName: '',
         contactNumber: '',
         whatsappNumber: '',
@@ -138,11 +142,7 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
   };
 
   const handleBack = () => {
-    if (editData) {
-      navigation.navigate('EnquiryList');
-    } else {
-      navigation.goBack();
-    }
+    navigation.navigate('EnquiryList');
   };
 
   const handleSubmit = async () => {
@@ -151,7 +151,7 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
     setLoading(true);
     try {
       const submissionData = {
-        enquiry_date: formData.date,
+        enquiry_date: formData.date.toISOString().split('T')[0],
         student_name: formData.studentName,
         contact_number: formData.contactNumber,
         whatsapp_number: formData.whatsappNumber || '',
@@ -191,6 +191,25 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
     }
   };
 
+  const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, date: selectedDate }));
+    }
+  };
+
+  const confirmIOSDate = () => {
+    setShowDatePicker(false);
+  };
+
+  const handleNumericInput = (field, value) => {
+    const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    updateFormData(field, numericValue);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -206,12 +225,57 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <CustomInput
-            label="Date"
-            value={formData.date}
-            onChangeText={(value) => updateFormData('date', value)}
-            placeholder="YYYY-MM-DD"
-          />
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <View pointerEvents="none">
+              <CustomInput
+                label="Date"
+                value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''}
+                editable={false}
+                placeholder="YYYY-MM-DD"
+              />
+            </View>
+          </TouchableOpacity>
+
+          {showDatePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.date instanceof Date ? formData.date : new Date()}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+            />
+          )}
+
+          {Platform.OS === 'ios' && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={showDatePicker}
+              onRequestClose={() => setShowDatePicker(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                      <Text style={styles.modalButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmIOSDate}>
+                      <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={formData.date instanceof Date ? formData.date : new Date()}
+                    mode="date"
+                    display="inline"
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    style={styles.iosDatePicker}
+                    themeVariant="light"
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
 
           <CustomInput
             label="Student Name *"
@@ -219,24 +283,27 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
             onChangeText={(value) => updateFormData('studentName', value)}
             placeholder="Enter student name"
             error={errors.studentName}
+            autoCapitalize="words"
           />
 
           <CustomInput
             label="Contact Number *"
             value={formData.contactNumber}
-            onChangeText={(value) => updateFormData('contactNumber', value)}
+            onChangeText={(value) => handleNumericInput('contactNumber', value)}
             placeholder="Enter 10-digit contact number"
             keyboardType="numeric"
             error={errors.contactNumber}
+            maxLength={10}
           />
 
           <CustomInput
             label="WhatsApp Number"
             value={formData.whatsappNumber}
-            onChangeText={(value) => updateFormData('whatsappNumber', value)}
+            onChangeText={(value) => handleNumericInput('whatsappNumber', value)}
             placeholder="Enter 10-digit WhatsApp number"
             keyboardType="numeric"
             error={errors.whatsappNumber}
+            maxLength={10}
           />
 
           <CustomPicker
@@ -267,6 +334,7 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
             value={formData.counsellorName}
             onChangeText={(value) => updateFormData('counsellorName', value)}
             placeholder="Enter counsellor name"
+            autoCapitalize="words"
           />
 
           <CustomPicker
@@ -361,6 +429,36 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.white,
+  },
+  modalButton: {
+    color: COLORS.primary,
+    fontSize: 17,
+  },
+  doneButton: {
+    fontWeight: 'bold',
+  },
+  iosDatePicker: {
+    height: 320,
+    backgroundColor: COLORS.white,
   },
 });
 

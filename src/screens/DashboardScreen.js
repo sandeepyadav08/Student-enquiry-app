@@ -20,7 +20,7 @@ const DashboardScreen = ({ navigation }) => {
     {
       title: 'Registration',
       icon: 'clipboard',
-      onPress: () => navigation.navigate('Registration'),
+      onPress: () => navigation.navigate('RegistrationList'),
       color: COLORS.info,
     },
     {
