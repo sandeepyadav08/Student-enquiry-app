@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -16,32 +17,44 @@ import CustomButton from '../components/CustomButton';
 import CustomPicker from '../components/CustomPicker';
 import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
-import { useEffect } from 'react';
+
+const initialFormData = {
+  date: new Date(),
+  studentName: '',
+  contactNumber: '',
+  whatsappNumber: '',
+  courseEnquiry: '',
+  modeOfReference: '',
+  place: '',
+  counsellorName: '',
+  franchisee: '',
+  remarks: '',
+  followUp1: '',
+  followUp2: '',
+  followUp3: '',
+};
 
 const StudentEnquiryScreen = ({ navigation, route }) => {
   const { editData } = route.params || {};
   
-  const [formData, setFormData] = useState({
-    date: editData?.enquiry_date || new Date().toISOString().split('T')[0],
-    studentName: editData?.student_name || '',
-    contactNumber: editData?.contact_number || '',
-    whatsappNumber: editData?.whatsapp_number || '',
-    courseEnquiry: editData?.course || '',
-    modeOfReference: editData?.reference_mode || '',
-    place: editData?.place || '',
-    counsellorName: editData?.counsellor_name || '',
-    franchisee: editData?.franchisee || '',
-    remarks: editData?.remarks || '',
-    followUp1: editData?.follow_up_1 || '',
-    followUp2: editData?.follow_up_2 || '',
-    followUp3: editData?.follow_up_3 || '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [franchisees, setFranchisees] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Clear form when screen is focused, but only if not in edit mode
+      if (!editData) {
+        setFormData(initialFormData);
+        setErrors({});
+      }
+      return () => {};
+    }, [editData])
+  );
 
   useEffect(() => {
     if (editData) {
@@ -173,6 +186,8 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
         ]);
       } else {
         await ApiService.createEnquiry(submissionData);
+        setFormData(initialFormData);
+        setErrors({});
         Alert.alert('Success', 'Enquiry created successfully', [
           { text: 'OK', onPress: () => handleBack() }
         ]);

@@ -237,6 +237,10 @@ class ApiService {
     });
   }
 
+  async getFeeRegistrationNumbers() {
+    return this.makeRequest('/fee-registrations-number/true?app=true');
+  }
+
   async forgotPassword(email) {
     try {
       const formData = new FormData();

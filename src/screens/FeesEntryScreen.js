@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -17,24 +18,26 @@ import CustomPicker from '../components/CustomPicker';
 import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
 
+const initialFormData = {
+  registrationNo: '',
+  date: new Date(),
+  studentName: '',
+  course: '',
+  totalFees: '',
+  paidFees: '',
+  dueFees: '',
+  dueDate: null,
+  paidThrough: '',
+  receivedBy: '',
+};
+
 const FeesEntryScreen = ({ navigation }) => {
-  const [formData, setFormData] = useState({
-    registrationNo: '',
-    registrationNo: '',
-    date: new Date(),
-    studentName: '',
-    course: '',
-    totalFees: '',
-    paidFees: '',
-    dueFees: '',
-    dueDate: null,
-    paidThrough: '',
-    receivedBy: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [registrationOptions, setRegistrationOptions] = useState([]);
+  const [fullRegistrationList, setFullRegistrationList] = useState([]);
   const [activeDateField, setActiveDateField] = useState(null);
 
   const paymentMethods = [
@@ -45,9 +48,18 @@ const FeesEntryScreen = ({ navigation }) => {
     { label: 'Cheque', value: 'Cheque' },
   ];
 
+  useFocusEffect(
+    useCallback(() => {
+      // Clear form when screen is focused
+      setFormData(initialFormData);
+      setErrors({});
+      fetchRegistrations();
+      return () => {};
+    }, [])
+  );
+
   useEffect(() => {
-    // Fetch registration numbers for dropdown
-    fetchRegistrations();
+    // Other side effects if needed
   }, []);
 
   useEffect(() => {
@@ -57,15 +69,25 @@ const FeesEntryScreen = ({ navigation }) => {
 
   const fetchRegistrations = async () => {
     try {
-      // Simulate API call to get registrations
-      const mockRegistrations = [
-        { label: 'REG001 - John Doe', value: 'REG001' },
-        { label: 'REG002 - Jane Smith', value: 'REG002' },
-        { label: 'REG003 - Mike Johnson', value: 'REG003' },
-      ];
-      setRegistrationOptions(mockRegistrations);
+      const response = await ApiService.getFeeRegistrationNumbers();
+      
+      if (response && (response.status === true || response.status === 200 || response.status === 'true') && response.data) {
+        const data = Array.isArray(response.data) ? response.data : [response.data];
+        setFullRegistrationList(data);
+        
+        const options = data.map(item => ({
+          label: `${item.registration_no} - ${item.student_name}`,
+          value: item.registration_no
+        }));
+        
+        setRegistrationOptions(options);
+      } else {
+        console.error('Invalid response format:', response);
+        setRegistrationOptions([]);
+      }
     } catch (error) {
       console.error('Error fetching registrations:', error);
+      Alert.alert('Error', 'Failed to fetch registration numbers');
     }
   };
 
@@ -84,27 +106,24 @@ const FeesEntryScreen = ({ navigation }) => {
     updateFormData('registrationNo', registrationNo);
     
     if (registrationNo) {
-      // Auto-fetch student details based on registration number
-      try {
-        // Simulate API call to get student details
-        const mockStudentData = {
-          studentName: 'John Doe',
-          course: 'UPSC Preparation',
-        };
-        
+      const selectedStudent = fullRegistrationList.find(
+        student => student.registration_no === registrationNo
+      );
+
+      if (selectedStudent) {
         setFormData(prev => ({
           ...prev,
-          studentName: mockStudentData.studentName,
-          course: mockStudentData.course,
+          studentName: selectedStudent.student_name,
+          course: selectedStudent.course,
+          totalFees: selectedStudent.total_fees || '',
         }));
-      } catch (error) {
-        console.error('Error fetching student details:', error);
       }
     } else {
       setFormData(prev => ({
         ...prev,
         studentName: '',
         course: '',
+        totalFees: '',
       }));
     }
   };
