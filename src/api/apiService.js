@@ -158,6 +158,10 @@ class ApiService {
     return this.makeRequest('/enquiry-list/true');
   }
 
+  async getEnquiryRegistrationData(id) {
+    return this.makeRequest(`/enquiry-registrations/true/${id}`);
+  }
+
   async getEnquiryDetails(id) {
     
     return this.makeRequest(`/enquiry/${id}`);

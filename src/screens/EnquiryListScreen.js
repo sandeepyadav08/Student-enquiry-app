@@ -23,6 +23,7 @@ const EnquiryListScreen = ({ navigation }) => {
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingRegistrationId, setLoadingRegistrationId] = useState(null);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -63,6 +64,21 @@ const EnquiryListScreen = ({ navigation }) => {
   const handleEditEnquiry = () => {
     setDetailsModalVisible(false);
     navigation.navigate('StudentEnquiry', { editData: selectedEnquiry });
+  };
+
+  const handleRegistration = async (item) => {
+    setLoadingRegistrationId(item.id);
+    try {
+      const response = await ApiService.getEnquiryRegistrationData(item.id);
+      navigation.navigate('Registration', { 
+        enquiryData: response.data,
+        timestamp: new Date().getTime() // Force refresh if already on screen
+      });
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to fetch registration data');
+    } finally {
+      setLoadingRegistrationId(null);
+    }
   };
 
   const filterEnquiries = () => {
@@ -111,12 +127,28 @@ const EnquiryListScreen = ({ navigation }) => {
           <Text style={styles.counsellor}>Counsellor: {item.counsellor_name || 'N/A'}</Text>
         </View>
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            onPress={() => handleViewDetails(item.id)}
-            style={styles.iconButton}
-          >
-            <Ionicons name="eye-outline" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
+          {item.register_status === '1' ? (
+            <Text style={styles.registeredText}>Registered</Text>
+          ) : (
+            <>
+              {loadingRegistrationId === item.id ? (
+                <ActivityIndicator size="small" color={COLORS.primary} style={{ marginRight: 8 }} />
+              ) : (
+                <TouchableOpacity 
+                  onPress={() => handleRegistration(item)}
+                  style={styles.iconButton}
+                >
+                  <Ionicons name="person-add-outline" size={24} color={COLORS.primary} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity 
+                onPress={() => handleViewDetails(item.id)}
+                style={styles.iconButton}
+              >
+                <Ionicons name="eye-outline" size={24} color={COLORS.primary} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -369,6 +401,11 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 4,
+  },
+  registeredText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.success,
   },
   counsellor: {
     fontSize: 12,

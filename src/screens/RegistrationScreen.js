@@ -27,7 +27,7 @@ const RegistrationScreen = ({ navigation, route }) => {
     parentHusbandOccupation: '',
     courseAdmissionSought: enquiryData?.course || '',
     dob: null,
-    address: '',
+    address: enquiryData?.place || '',
     contactNo: enquiryData?.contact_number || '',
     guardianContactNo: '',
     email: '',
@@ -163,6 +163,7 @@ const RegistrationScreen = ({ navigation, route }) => {
         medium: formData.medium,
         registration_date: formData.dateOfRegistration.toISOString().split('T')[0],
         registration_fees: formData.registrationFees,
+        ...(enquiryData?.id && { enquiry_id: enquiryData.id }),
       };
 
       if (editData?.id) {
@@ -191,7 +192,7 @@ const RegistrationScreen = ({ navigation, route }) => {
       parentHusbandOccupation: '',
       courseAdmissionSought: enquiryData?.course || '',
       dob: null,
-      address: '',
+      address: enquiryData?.place || '',
       contactNo: enquiryData?.contact_number || '',
       guardianContactNo: '',
       email: '',
