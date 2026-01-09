@@ -18,6 +18,7 @@ const PaymentHistoryScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [registrationMapping, setRegistrationMapping] = useState({});
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -28,12 +29,28 @@ const PaymentHistoryScreen = ({ navigation }) => {
 
   const fetchPaymentHistory = async () => {
     try {
-      const response = await ApiService.getPaymentHistory();
-      if (response && response.status === true) {
-        setPayments(response.data || []);
+      const [historyResponse, regResponse] = await Promise.all([
+        ApiService.getPaymentHistory(),
+        ApiService.getRegistrations()
+      ]);
+
+      if (regResponse && regResponse.data) {
+        const regData = Array.isArray(regResponse.data) ? regResponse.data : [regResponse.data];
+        const mapping = {};
+        regData.forEach(item => {
+          if (item.registration_no) {
+            // Store with trimmed and uppercase key for robust matching
+            const key = item.registration_no.toString().trim().toUpperCase();
+            mapping[key] = item.student_name;
+          }
+        });
+        setRegistrationMapping(mapping);
+      }
+
+      if (historyResponse && historyResponse.status === true) {
+        setPayments(historyResponse.data || []);
       } else {
         setPayments([]);
-        // Handle case where status might be false or response is unexpected
       }
     } catch (error) {
       console.error('Fetch Payment History Error:', error);
@@ -43,12 +60,24 @@ const PaymentHistoryScreen = ({ navigation }) => {
     }
   };
 
+  const getStudentName = (item) => {
+    if (item.student_name) return item.student_name;
+    if (!item.registration_no) return 'N/A';
+    
+    const key = item.registration_no.toString().trim().toUpperCase();
+    return registrationMapping[key] || 'N/A';
+  };
+
   const renderPaymentItem = ({ item }) => (
     <View style={styles.paymentCard}>
       <View style={styles.cardHeader}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.regNoLabel}>Registration No</Text>
           <Text style={styles.regNoValue}>{item.registration_no}</Text>
+          <Text style={[styles.regNoLabel, { marginTop: 4 }]}>Student Name</Text>
+          <Text style={styles.studentNameValue}>
+            {getStudentName(item)}
+          </Text>
         </View>
         <View style={styles.dateContainer}>
           <Text style={styles.dateLabel}>Date</Text>
@@ -182,6 +211,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.primary,
+  },
+  studentNameValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
   },
   dateContainer: {
     alignItems: 'flex-end',
