@@ -25,8 +25,9 @@ const initialFormData = {
   course: '',
   totalFees: '',
   paidFees: '',
+  initialDue: '',
   dueFees: '',
-  dueDate: null,
+  dueDate: new Date(),
   paidThrough: '',
   receivedBy: '',
 };
@@ -63,9 +64,9 @@ const FeesEntryScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    // Calculate due fees when total or paid fees change
+    // Calculate due fees when initial due or paid fees change
     calculateDueFees();
-  }, [formData.totalFees, formData.paidFees]);
+  }, [formData.initialDue, formData.paidFees]);
 
   const fetchRegistrations = async () => {
     try {
@@ -92,9 +93,9 @@ const FeesEntryScreen = ({ navigation }) => {
   };
 
   const calculateDueFees = () => {
-    const total = parseFloat(formData.totalFees) || 0;
+    const initialDue = parseFloat(formData.initialDue) || 0;
     const paid = parseFloat(formData.paidFees) || 0;
-    const due = total - paid;
+    const due = initialDue - paid;
     
     setFormData(prev => ({
       ...prev,
@@ -116,6 +117,12 @@ const FeesEntryScreen = ({ navigation }) => {
           studentName: selectedStudent.student_name,
           course: selectedStudent.course,
           totalFees: selectedStudent.total_fees || '',
+          initialDue: (selectedStudent.due_fees && parseFloat(selectedStudent.due_fees) > 0) 
+            ? selectedStudent.due_fees 
+            : (selectedStudent.total_fees || ''),
+          dueFees: (selectedStudent.due_fees && parseFloat(selectedStudent.due_fees) > 0) 
+            ? selectedStudent.due_fees 
+            : (selectedStudent.total_fees || ''),
         }));
       }
     } else {
@@ -124,6 +131,8 @@ const FeesEntryScreen = ({ navigation }) => {
         studentName: '',
         course: '',
         totalFees: '',
+        initialDue: '',
+        dueFees: '',
       }));
     }
   };
@@ -155,11 +164,11 @@ const FeesEntryScreen = ({ navigation }) => {
       newErrors.receivedBy = 'Received by is required';
     }
 
-    const totalFees = parseFloat(formData.totalFees) || 0;
+    const initialDue = parseFloat(formData.initialDue) || 0;
     const paidFees = parseFloat(formData.paidFees) || 0;
     
-    if (paidFees > totalFees) {
-      newErrors.paidFees = 'Paid fees cannot exceed total fees';
+    if (paidFees > initialDue) {
+      newErrors.paidFees = 'Paid fees cannot exceed initial due';
     }
 
     setErrors(newErrors);
@@ -253,12 +262,10 @@ const FeesEntryScreen = ({ navigation }) => {
           />
 
           <CustomInput
-            label="Total Fees *"
+            label="Total Fees"
             value={formData.totalFees}
-            onChangeText={(value) => updateFormData('totalFees', value)}
-            placeholder="Enter total fees"
-            keyboardType="numeric"
-            error={errors.totalFees}
+            editable={false}
+            style={styles.disabledInputStyle}
           />
 
           <CustomInput
@@ -296,9 +303,7 @@ const FeesEntryScreen = ({ navigation }) => {
                   : new Date()
               }
               mode="date"
-              display="default"
-              onChange={handleDateChange}
-              maximumDate={new Date()} // Optional: remove if due dates can be in future
+              maximumDate={activeDateField === 'date' ? new Date() : undefined}
             />
           )}
 
@@ -328,7 +333,7 @@ const FeesEntryScreen = ({ navigation }) => {
                     mode="date"
                     display="inline"
                     onChange={handleDateChange}
-                    // maximumDate={new Date()} // Optional: decide if Due Date can be future
+                    maximumDate={activeDateField === 'date' ? new Date() : undefined}
                     style={styles.iosDatePicker}
                     themeVariant="light"
                   />

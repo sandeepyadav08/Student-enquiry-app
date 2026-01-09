@@ -2,8 +2,10 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrawerNavigator from './DrawerNavigator';
 import FeesEntryScreen from '../screens/FeesEntryScreen';
+import PaymentHistoryScreen from '../screens/PaymentHistoryScreen';
 import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
 
@@ -13,6 +15,7 @@ const Tab = createBottomTabNavigator();
 const LogoutComponent = () => null;
 
 const BottomTabNavigator = () => {
+  const insets = useSafeAreaInsets();
   const handleLogout = (navigation) => {
     Alert.alert(
       'Logout',
@@ -56,8 +59,8 @@ const BottomTabNavigator = () => {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarStyle: {
-            height: Platform.OS === 'ios' ? 85 : 60,
-            paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+            height: Platform.OS === 'ios' ? 85 : 60 + insets.bottom,
+            paddingBottom: Platform.OS === 'ios' ? 30 : Math.max(insets.bottom, 10),
             paddingTop: 10,
         }
       })}
@@ -68,7 +71,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen 
         name="Payment" 
-        component={FeesEntryScreen} 
+        component={PaymentHistoryScreen} 
       />
       <Tab.Screen 
         name="Logout" 
