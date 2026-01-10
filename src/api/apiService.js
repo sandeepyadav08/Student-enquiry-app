@@ -310,6 +310,10 @@ class ApiService {
     return this.makeRequest("/fee-payments/true");
   }
 
+  async getPaymentDetails(id) {
+    return this.makeRequest(`/fee-payments/${id}/true`);
+  }
+
   async forgotPassword(email) {
     try {
       const formData = new FormData();
