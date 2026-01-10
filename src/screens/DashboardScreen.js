@@ -26,11 +26,11 @@ const DashboardScreen = ({ navigation }) => {
         ApiService.getDashboardStats(),
       ]);
 
-      if (profileRes && profileRes.status === true) {
+      if (profileRes && profileRes.status === 201) {
         setProfile(profileRes.data);
       }
 
-      if (statsRes && statsRes.status === true) {
+      if (statsRes && statsRes.status === 201) {
         setStats(statsRes);
       }
     } catch (error) {
