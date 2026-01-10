@@ -25,6 +25,12 @@ const EnquiryListScreen = ({ navigation }) => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingRegistrationId, setLoadingRegistrationId] = useState(null);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchEnquiries();
@@ -102,7 +108,7 @@ const EnquiryListScreen = ({ navigation }) => {
     >
       <View style={styles.enquiryHeader}>
         <Text style={styles.studentName}>{item.student_name}</Text>
-        <Text style={styles.date}>{item.enquiry_date}</Text>
+        <Text style={styles.date}>{formatDate(item.enquiry_date)}</Text>
       </View>
       
       <View style={styles.enquiryDetails}>
@@ -230,7 +236,7 @@ const EnquiryListScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Date</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.enquiry_date}</Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedEnquiry.enquiry_date)}</Text>
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Contact Number</Text>

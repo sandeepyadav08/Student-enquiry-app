@@ -244,9 +244,9 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
             <View pointerEvents="none">
               <CustomInput
                 label="Date"
-                value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''}
+                value={formData.date instanceof Date ? formData.date.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
                 editable={false}
-                placeholder="YYYY-MM-DD"
+                placeholder="DD-MM-YYYY"
               />
             </View>
           </TouchableOpacity>

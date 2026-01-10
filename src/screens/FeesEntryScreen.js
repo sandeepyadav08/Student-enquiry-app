@@ -240,9 +240,9 @@ const FeesEntryScreen = ({ navigation }) => {
             <View pointerEvents="none">
               <CustomInput
                 label="Date"
-                value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''}
+                value={formData.date instanceof Date ? formData.date.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
                 editable={false}
-                placeholder="YYYY-MM-DD"
+                placeholder="DD-MM-YYYY"
               />
             </View>
           </TouchableOpacity>
@@ -288,9 +288,9 @@ const FeesEntryScreen = ({ navigation }) => {
             <View pointerEvents="none">
               <CustomInput
                 label="Due Date"
-                value={formData.dueDate instanceof Date ? formData.dueDate.toISOString().split('T')[0] : ''}
+                value={formData.dueDate instanceof Date ? formData.dueDate.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
                 editable={false}
-                placeholder="YYYY-MM-DD"
+                placeholder="DD-MM-YYYY"
               />
             </View>
           </TouchableOpacity>

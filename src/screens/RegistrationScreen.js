@@ -311,9 +311,9 @@ const RegistrationScreen = ({ navigation, route }) => {
             <View pointerEvents="none">
               <CustomInput
                 label="Date of Birth *"
-                value={formData.dob instanceof Date ? formData.dob.toISOString().split('T')[0] : ''}
+                value={formData.dob instanceof Date ? formData.dob.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
                 editable={false}
-                placeholder="YYYY-MM-DD"
+                placeholder="DD-MM-YYYY"
                 error={errors.dob}
               />
             </View>
@@ -415,9 +415,9 @@ const RegistrationScreen = ({ navigation, route }) => {
             <View pointerEvents="none">
               <CustomInput
                 label="Date of Registration"
-                value={formData.dateOfRegistration instanceof Date ? formData.dateOfRegistration.toISOString().split('T')[0] : ''}
+                value={formData.dateOfRegistration instanceof Date ? formData.dateOfRegistration.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
                 editable={false}
-                placeholder="YYYY-MM-DD"
+                placeholder="DD-MM-YYYY"
               />
             </View>
           </TouchableOpacity>

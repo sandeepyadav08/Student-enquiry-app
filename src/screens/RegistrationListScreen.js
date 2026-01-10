@@ -24,6 +24,12 @@ const RegistrationListScreen = ({ navigation }) => {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchRegistrations();
@@ -80,7 +86,7 @@ const RegistrationListScreen = ({ navigation }) => {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.studentName}>{item.student_name}</Text>
-        <Text style={styles.date}>{item.registration_date}</Text>
+        <Text style={styles.date}>{formatDate(item.registration_date)}</Text>
       </View>
       
       <View style={styles.cardDetails}>
@@ -202,7 +208,7 @@ const RegistrationListScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Date of Registration</Text>
-                    <Text style={styles.detailValue}>{selectedRegistration.registration_date}</Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedRegistration.registration_date)}</Text>
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Parent/Husband Name</Text>

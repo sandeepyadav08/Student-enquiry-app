@@ -20,6 +20,12 @@ const PaymentHistoryScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [registrationMapping, setRegistrationMapping] = useState({});
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchPaymentHistory();
@@ -81,7 +87,7 @@ const PaymentHistoryScreen = ({ navigation }) => {
         </View>
         <View style={styles.dateContainer}>
           <Text style={styles.dateLabel}>Date</Text>
-          <Text style={styles.dateValue}>{item.fee_date}</Text>
+          <Text style={styles.dateValue}>{formatDate(item.fee_date)}</Text>
         </View>
       </View>
 
