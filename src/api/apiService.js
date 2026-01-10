@@ -229,11 +229,11 @@ class ApiService {
     });
   }
   async getCourses() {
-    return this.makeRequest("/course-list");
+    return this.makeRequest("/course-list/true");
   }
 
   async getFranchisees() {
-    return this.makeRequest("/franchisee-list");
+    return this.makeRequest("/franchisee-list/true");
   }
 
   // Registration APIs
