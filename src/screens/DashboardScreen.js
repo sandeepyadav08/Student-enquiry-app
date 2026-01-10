@@ -46,26 +46,7 @@ const DashboardScreen = ({ navigation }) => {
     }, [fetchDashboardData])
   );
 
-  const menuItems = [
-    {
-      title: 'Student Enquiry',
-      icon: 'list',
-      onPress: () => navigation.navigate('EnquiryList'),
-      color: COLORS.stats,
-    },
-    {
-      title: 'Registration',
-      icon: 'clipboard',
-      onPress: () => navigation.navigate('RegistrationList'),
-      color: COLORS.info,
-    },
-    {
-      title: 'Fees Entry',
-      icon: 'card',
-      onPress: () => navigation.navigate('FeesEntry'),
-      color: COLORS.warning,
-    },
-  ];
+
 
   const statsData = [
     {
@@ -159,23 +140,7 @@ const DashboardScreen = ({ navigation }) => {
         ))}
       </View>
 
-      <View style={styles.menuContainer}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.menuGrid}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={item.onPress}
-            >
-              <View style={[styles.menuIcon, { backgroundColor: item.color + '20' }]}>
-                <Ionicons name={item.icon} size={32} color={item.color} />
-              </View>
-              <Text style={styles.menuText}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+
 
       {stats && (
         <View style={styles.chartContainer}>
@@ -262,49 +227,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
-  menuContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
     marginBottom: 16,
-  },
-  menuGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  menuItem: {
-    width: '47%',
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: COLORS.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  menuIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  menuText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-    textAlign: 'center',
   },
   chartContainer: {
     paddingHorizontal: 20,

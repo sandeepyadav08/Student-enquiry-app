@@ -264,7 +264,7 @@ class ApiService {
   }
 
   async getRegistrationDetails(id) {
-    return this.makeRequest(`/registrations/${id}?app=true`);
+    return this.makeRequest(`/registrations/${id}/true`);
   }
 
   async updateRegistration(id, registrationData) {
