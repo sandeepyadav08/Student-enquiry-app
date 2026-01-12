@@ -29,9 +29,9 @@ const initialFormData = {
   counsellorName: '',
   franchisee: '',
   remarks: '',
-  followUp1: '',
-  followUp2: '',
-  followUp3: '',
+  followUp1: new Date(),
+  followUp2: null,
+  followUp3: null,
 };
 
 const StudentEnquiryScreen = ({ navigation, route }) => {
@@ -39,11 +39,43 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
   
   const [formData, setFormData] = useState(initialFormData);
 
+  // Helper function to validate and parse dates
+  const parseValidDate = (dateString) => {
+    if (!dateString || dateString === '' || dateString === null || dateString === undefined) {
+      return null;
+    }
+    
+    // Check for invalid date formats like "0000-00-00" or "0000-00-00 00:00:00"
+    if (dateString.includes('0000-00-00') || dateString === '0000-00-00' || dateString === '0000-00-00 00:00:00') {
+      return null;
+    }
+    
+    // Check if it's just zeros or invalid patterns
+    if (dateString.match(/^0+[^1-9]*$/) || dateString.includes('00:00:00')) {
+      return null;
+    }
+    
+    const date = new Date(dateString);
+    
+    // Check if date is valid and not a weird date like year < 1900
+    if (isNaN(date.getTime()) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
+      return null;
+    }
+    
+    return date;
+  };
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [franchisees, setFranchisees] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showFollowUpDatePicker, setShowFollowUpDatePicker] = useState(false);
+  const [showFollowUpTimePicker, setShowFollowUpTimePicker] = useState(false);
+  const [showFollowUp2DatePicker, setShowFollowUp2DatePicker] = useState(false);
+  const [showFollowUp2TimePicker, setShowFollowUp2TimePicker] = useState(false);
+  const [showFollowUp3DatePicker, setShowFollowUp3DatePicker] = useState(false);
+  const [showFollowUp3TimePicker, setShowFollowUp3TimePicker] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,8 +90,17 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (editData) {
+      // Parse enquiry date with special handling for invalid dates
+      let enquiryDate = new Date();
+      if (editData.enquiry_date && editData.enquiry_date !== '0000-00-00' && editData.enquiry_date !== '') {
+        const parsedEnquiryDate = new Date(editData.enquiry_date);
+        if (!isNaN(parsedEnquiryDate.getTime()) && parsedEnquiryDate.getFullYear() > 1900) {
+          enquiryDate = parsedEnquiryDate;
+        }
+      }
+      
       setFormData({
-        date: editData.enquiry_date ? new Date(editData.enquiry_date) : new Date(),
+        date: enquiryDate,
         studentName: editData.student_name || '',
         contactNumber: editData.contact_number || '',
         whatsappNumber: editData.whatsapp_number || '',
@@ -69,9 +110,9 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
         counsellorName: editData.counsellor_name || '',
         franchisee: editData.franchisee || '',
         remarks: editData.remarks || '',
-        followUp1: editData.follow_up_1 || '',
-        followUp2: editData.follow_up_2 || '',
-        followUp3: editData.follow_up_3 || '',
+        followUp1: editData.follow_up_1 ? new Date(editData.follow_up_1) : new Date(),
+        followUp2: parseValidDate(editData.follow_up_2),
+        followUp3: parseValidDate(editData.follow_up_3),
       });
     } else {
       setFormData({
@@ -85,9 +126,9 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
         counsellorName: '',
         franchisee: '',
         remarks: '',
-        followUp1: '',
-        followUp2: '',
-        followUp3: '',
+        followUp1: new Date(),
+        followUp2: null,
+        followUp3: null,
       });
     }
   }, [editData]);
@@ -163,8 +204,27 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
 
     setLoading(true);
     try {
+      // Helper function to format date as YYYY-MM-DD
+      const formatDateForBackend = (date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`;
+      };
+
+      // Helper function to format datetime as YYYY-MM-DD HH:MM:SS (MySQL format)
+      const formatDateTimeForBackend = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = '00';
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      };
+
       const submissionData = {
-        enquiry_date: formData.date.toISOString().split('T')[0],
+        enquiry_date: formatDateForBackend(formData.date),
         student_name: formData.studentName,
         contact_number: formData.contactNumber,
         whatsapp_number: formData.whatsappNumber || '',
@@ -174,10 +234,27 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
         counsellor_name: formData.counsellorName || '',
         franchisee: formData.franchisee,
         remarks: formData.remarks || '',
-        follow_up_1: formData.followUp1 || '',
-        follow_up_2: formData.followUp2 || '',
-        follow_up_3: formData.followUp3 || '',
+        follow_up_1: formData.followUp1 instanceof Date ? 
+          formatDateTimeForBackend(formData.followUp1) : formatDateTimeForBackend(new Date()),
       };
+
+      // For updates, always send all follow-up fields (including null values)
+      // For new entries, only send if they have values
+      if (editData?.id) {
+        // Update mode - send all follow-up fields
+        submissionData.follow_up_2 = formData.followUp2 instanceof Date ? 
+          formatDateTimeForBackend(formData.followUp2) : null;
+        submissionData.follow_up_3 = formData.followUp3 instanceof Date ? 
+          formatDateTimeForBackend(formData.followUp3) : null;
+      } else {
+        // Create mode - only send if they have values
+        if (formData.followUp2 instanceof Date) {
+          submissionData.follow_up_2 = formatDateTimeForBackend(formData.followUp2);
+        }
+        if (formData.followUp3 instanceof Date) {
+          submissionData.follow_up_3 = formatDateTimeForBackend(formData.followUp3);
+        }
+      }
 
       if (editData?.id) {
         await ApiService.updateEnquiry(editData.id, submissionData);
@@ -223,6 +300,105 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
   const handleNumericInput = (field, value) => {
     const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
     updateFormData(field, numericValue);
+  };
+
+  const handleFollowUpDateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUpDatePicker(false);
+    }
+    if (selectedDate) {
+      const updatedDate = new Date(formData.followUp1);
+      updatedDate.setFullYear(selectedDate.getFullYear());
+      updatedDate.setMonth(selectedDate.getMonth());
+      updatedDate.setDate(selectedDate.getDate());
+      setFormData(prev => ({ ...prev, followUp1: updatedDate }));
+    }
+  };
+
+  const handleFollowUpTimeChange = (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUpTimePicker(false);
+    }
+    if (selectedTime) {
+      const updatedDate = new Date(formData.followUp1);
+      updatedDate.setHours(selectedTime.getHours());
+      updatedDate.setMinutes(selectedTime.getMinutes());
+      setFormData(prev => ({ ...prev, followUp1: updatedDate }));
+    }
+  };
+
+  const handleFollowUp2DateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUp2DatePicker(false);
+    }
+    if (selectedDate) {
+      const updatedDate = formData.followUp2 instanceof Date ? new Date(formData.followUp2) : new Date();
+      updatedDate.setFullYear(selectedDate.getFullYear());
+      updatedDate.setMonth(selectedDate.getMonth());
+      updatedDate.setDate(selectedDate.getDate());
+      setFormData(prev => ({ ...prev, followUp2: updatedDate }));
+    }
+  };
+
+  const handleFollowUp2TimeChange = (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUp2TimePicker(false);
+    }
+    if (selectedTime) {
+      const updatedDate = formData.followUp2 instanceof Date ? new Date(formData.followUp2) : new Date();
+      updatedDate.setHours(selectedTime.getHours());
+      updatedDate.setMinutes(selectedTime.getMinutes());
+      setFormData(prev => ({ ...prev, followUp2: updatedDate }));
+    }
+  };
+
+  const handleFollowUp3DateChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUp3DatePicker(false);
+    }
+    if (selectedDate) {
+      const updatedDate = formData.followUp3 instanceof Date ? new Date(formData.followUp3) : new Date();
+      updatedDate.setFullYear(selectedDate.getFullYear());
+      updatedDate.setMonth(selectedDate.getMonth());
+      updatedDate.setDate(selectedDate.getDate());
+      setFormData(prev => ({ ...prev, followUp3: updatedDate }));
+    }
+  };
+
+  const handleFollowUp3TimeChange = (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowFollowUp3TimePicker(false);
+    }
+    if (selectedTime) {
+      const updatedDate = formData.followUp3 instanceof Date ? new Date(formData.followUp3) : new Date();
+      updatedDate.setHours(selectedTime.getHours());
+      updatedDate.setMinutes(selectedTime.getMinutes());
+      setFormData(prev => ({ ...prev, followUp3: updatedDate }));
+    }
+  };
+
+  const confirmIOSFollowUpDate = () => {
+    setShowFollowUpDatePicker(false);
+  };
+
+  const confirmIOSFollowUpTime = () => {
+    setShowFollowUpTimePicker(false);
+  };
+
+  const confirmIOSFollowUp2Date = () => {
+    setShowFollowUp2DatePicker(false);
+  };
+
+  const confirmIOSFollowUp2Time = () => {
+    setShowFollowUp2TimePicker(false);
+  };
+
+  const confirmIOSFollowUp3Date = () => {
+    setShowFollowUp3DatePicker(false);
+  };
+
+  const confirmIOSFollowUp3Time = () => {
+    setShowFollowUp3TimePicker(false);
   };
 
   return (
@@ -369,26 +545,368 @@ const StudentEnquiryScreen = ({ navigation, route }) => {
             multiline
           />
 
-          <CustomInput
-            label="Follow Up 1"
-            value={formData.followUp1}
-            onChangeText={(value) => updateFormData('followUp1', value)}
-            placeholder="Enter follow up 1"
-          />
+          <Text style={styles.followUpLabel}>Follow Up 1</Text>
+          <View style={styles.dateTimeRow}>
+            <TouchableOpacity 
+              style={styles.dateButton}
+              onPress={() => setShowFollowUpDatePicker(true)}
+            >
+              <Text style={styles.dateButtonText}>
+                {formData.followUp1 instanceof Date ? 
+                  formData.followUp1.toLocaleDateString('en-GB').replace(/\//g, '-') : '12-01-2026'
+                }
+              </Text>
+              <Ionicons name="calendar-outline" size={20} color={COLORS.text} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.timeButton}
+              onPress={() => setShowFollowUpTimePicker(true)}
+            >
+              <Text style={styles.timeButtonText}>
+                {formData.followUp1 instanceof Date ? 
+                  formData.followUp1.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                  }) : '11:07 AM'
+                }
+              </Text>
+              <Ionicons name="time-outline" size={20} color={COLORS.text} />
+            </TouchableOpacity>
+          </View>
 
-          <CustomInput
-            label="Follow Up 2"
-            value={formData.followUp2}
-            onChangeText={(value) => updateFormData('followUp2', value)}
-            placeholder="Enter follow up 2"
-          />
+          {showFollowUpDatePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp1 instanceof Date ? formData.followUp1 : new Date()}
+              mode="date"
+              display="default"
+              onChange={handleFollowUpDateChange}
+              minimumDate={new Date()}
+            />
+          )}
 
-          <CustomInput
-            label="Follow Up 3"
-            value={formData.followUp3}
-            onChangeText={(value) => updateFormData('followUp3', value)}
-            placeholder="Enter follow up 3"
-          />
+          {showFollowUpTimePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp1 instanceof Date ? formData.followUp1 : new Date()}
+              mode="time"
+              display="default"
+              onChange={handleFollowUpTimeChange}
+            />
+          )}
+
+          {showFollowUp2DatePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp2 instanceof Date ? formData.followUp2 : new Date()}
+              mode="date"
+              display="default"
+              onChange={handleFollowUp2DateChange}
+              minimumDate={new Date()}
+            />
+          )}
+
+          {showFollowUp2TimePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp2 instanceof Date ? formData.followUp2 : new Date()}
+              mode="time"
+              display="default"
+              onChange={handleFollowUp2TimeChange}
+            />
+          )}
+
+          {showFollowUp3DatePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp3 instanceof Date ? formData.followUp3 : new Date()}
+              mode="date"
+              display="default"
+              onChange={handleFollowUp3DateChange}
+              minimumDate={new Date()}
+            />
+          )}
+
+          {showFollowUp3TimePicker && Platform.OS === 'android' && (
+            <DateTimePicker
+              value={formData.followUp3 instanceof Date ? formData.followUp3 : new Date()}
+              mode="time"
+              display="default"
+              onChange={handleFollowUp3TimeChange}
+            />
+          )}
+
+          {Platform.OS === 'ios' && (
+            <>
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUpDatePicker}
+                onRequestClose={() => setShowFollowUpDatePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUpDatePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUpDate}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp1 instanceof Date ? formData.followUp1 : new Date()}
+                      mode="date"
+                      display="inline"
+                      onChange={handleFollowUpDateChange}
+                      minimumDate={new Date()}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+              
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUpTimePicker}
+                onRequestClose={() => setShowFollowUpTimePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUpTimePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUpTime}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp1 instanceof Date ? formData.followUp1 : new Date()}
+                      mode="time"
+                      display="inline"
+                      onChange={handleFollowUpTimeChange}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUp2DatePicker}
+                onRequestClose={() => setShowFollowUp2DatePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUp2DatePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUp2Date}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp2 instanceof Date ? formData.followUp2 : new Date()}
+                      mode="date"
+                      display="inline"
+                      onChange={handleFollowUp2DateChange}
+                      minimumDate={new Date()}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+              
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUp2TimePicker}
+                onRequestClose={() => setShowFollowUp2TimePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUp2TimePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUp2Time}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp2 instanceof Date ? formData.followUp2 : new Date()}
+                      mode="time"
+                      display="inline"
+                      onChange={handleFollowUp2TimeChange}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUp3DatePicker}
+                onRequestClose={() => setShowFollowUp3DatePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUp3DatePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUp3Date}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp3 instanceof Date ? formData.followUp3 : new Date()}
+                      mode="date"
+                      display="inline"
+                      onChange={handleFollowUp3DateChange}
+                      minimumDate={new Date()}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+              
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showFollowUp3TimePicker}
+                onRequestClose={() => setShowFollowUp3TimePicker(false)}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <TouchableOpacity onPress={() => setShowFollowUp3TimePicker(false)}>
+                        <Text style={styles.modalButton}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={confirmIOSFollowUp3Time}>
+                        <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                      value={formData.followUp3 instanceof Date ? formData.followUp3 : new Date()}
+                      mode="time"
+                      display="inline"
+                      onChange={handleFollowUp3TimeChange}
+                      style={styles.iosDatePicker}
+                      themeVariant="light"
+                    />
+                  </View>
+                </View>
+              </Modal>
+            </>
+          )}
+
+          <Text style={styles.followUpLabel}>Follow Up 2</Text>
+          {formData.followUp2 ? (
+            <View>
+              <View style={styles.dateTimeRow}>
+                <TouchableOpacity 
+                  style={styles.dateButton}
+                  onPress={() => setShowFollowUp2DatePicker(true)}
+                >
+                  <Text style={styles.dateButtonText}>
+                    {formData.followUp2.toLocaleDateString('en-GB').replace(/\//g, '-')}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color={COLORS.text} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.timeButton}
+                  onPress={() => setShowFollowUp2TimePicker(true)}
+                >
+                  <Text style={styles.timeButtonText}>
+                    {formData.followUp2.toLocaleTimeString('en-US', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: true 
+                    })}
+                  </Text>
+                  <Ionicons name="time-outline" size={20} color={COLORS.text} />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity 
+                style={styles.removeFollowUpButton}
+                onPress={() => setFormData(prev => ({ ...prev, followUp2: null, followUp3: null }))}
+              >
+                <Ionicons name="trash-outline" size={16} color={COLORS.error || '#FF6B6B'} />
+                <Text style={styles.removeFollowUpText}>Remove Follow Up 2</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={styles.addFollowUpButton}
+              onPress={() => {
+                setFormData(prev => ({ ...prev, followUp2: new Date() }));
+              }}
+            >
+              <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
+              <Text style={styles.addFollowUpText}>Add Follow Up 2</Text>
+            </TouchableOpacity>
+          )}
+
+          {formData.followUp2 && (
+            <>
+              <Text style={styles.followUpLabel}>Follow Up 3</Text>
+              {formData.followUp3 ? (
+                <View>
+                  <View style={styles.dateTimeRow}>
+                    <TouchableOpacity 
+                      style={styles.dateButton}
+                      onPress={() => setShowFollowUp3DatePicker(true)}
+                    >
+                      <Text style={styles.dateButtonText}>
+                        {formData.followUp3.toLocaleDateString('en-GB').replace(/\//g, '-')}
+                      </Text>
+                      <Ionicons name="calendar-outline" size={20} color={COLORS.text} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.timeButton}
+                      onPress={() => setShowFollowUp3TimePicker(true)}
+                    >
+                      <Text style={styles.timeButtonText}>
+                        {formData.followUp3.toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: true 
+                        })}
+                      </Text>
+                      <Ionicons name="time-outline" size={20} color={COLORS.text} />
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.removeFollowUpButton}
+                    onPress={() => setFormData(prev => ({ ...prev, followUp3: null }))}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={COLORS.error || '#FF6B6B'} />
+                    <Text style={styles.removeFollowUpText}>Remove Follow Up 3</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.addFollowUpButton}
+                  onPress={() => {
+                    setFormData(prev => ({ ...prev, followUp3: new Date() }));
+                  }}
+                >
+                  <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
+                  <Text style={styles.addFollowUpText}>Add Follow Up 3</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
 
           <CustomButton
             title={editData ? "Update Enquiry" : "Submit Enquiry"}
@@ -474,6 +992,78 @@ const styles = StyleSheet.create({
   iosDatePicker: {
     height: 320,
     backgroundColor: COLORS.white,
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap: 10,
+  },
+  followUpLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  dateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.inputBackground || COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder || COLORS.border,
+    borderRadius: 8,
+    padding: 15,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: COLORS.inputText || COLORS.text,
+  },
+  timeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.inputBackground || COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder || COLORS.border,
+    borderRadius: 8,
+    padding: 15,
+  },
+  timeButtonText: {
+    fontSize: 16,
+    color: COLORS.inputText || COLORS.text,
+  },
+  addFollowUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 20,
+  },
+  addFollowUpText: {
+    fontSize: 16,
+    color: COLORS.primary,
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  removeFollowUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 20,
+    padding: 8,
+  },
+  removeFollowUpText: {
+    fontSize: 14,
+    color: COLORS.error || '#FF6B6B',
+    marginLeft: 4,
   },
 });
 

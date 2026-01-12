@@ -31,6 +31,24 @@ const EnquiryListScreen = ({ navigation }) => {
     return date.toLocaleDateString('en-GB').replace(/\//g, '-');
   };
 
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString || dateTimeString === 'N/A' || dateTimeString.includes('0000-00-00')) {
+      return 'N/A';
+    }
+    
+    const date = new Date(dateTimeString);
+    if (isNaN(date.getTime()) || date.getFullYear() < 1900) return 'N/A';
+    
+    const formattedDate = date.toLocaleDateString('en-GB').replace(/\//g, '-');
+    const formattedTime = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    
+    return `${formattedDate} ${formattedTime}`;
+  };
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchEnquiries();
@@ -229,7 +247,11 @@ const EnquiryListScreen = ({ navigation }) => {
               </View>
             ) : selectedEnquiry && (
               <>
-                <ScrollView style={styles.detailsScroll}>
+                <ScrollView 
+                  style={styles.detailsScroll}
+                  contentContainerStyle={styles.scrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Student Name</Text>
                     <Text style={styles.detailValue}>{selectedEnquiry.student_name}</Text>
@@ -272,15 +294,15 @@ const EnquiryListScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Follow Up 1</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_1 || 'N/A'}</Text>
+                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_1)}</Text>
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Follow Up 2</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_2 || 'N/A'}</Text>
+                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_2)}</Text>
                   </View>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Follow Up 3</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.follow_up_3 || 'N/A'}</Text>
+                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_3)}</Text>
                   </View>
                 </ScrollView>
                 <View style={styles.modalFooter}>
@@ -445,7 +467,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '85%',
+    height: '80%',
     width: '100%',
   },
   modalHeader: {
@@ -467,7 +489,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailsScroll: {
+    flex: 1,
     padding: 24,
+  },
+  scrollContent: {
+    paddingBottom: 40, // Sufficient padding at bottom for the last item
   },
   detailItem: {
     marginBottom: 20,

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import CustomPicker from '../components/CustomPicker';
+import SearchablePicker from '../components/SearchablePicker';
 import ApiService from '../api/apiService';
 import COLORS from '../constants/colors';
 
@@ -78,7 +79,8 @@ const FeesEntryScreen = ({ navigation }) => {
         
         const options = data.map(item => ({
           label: `${item.registration_no} - ${item.student_name}`,
-          value: item.registration_no
+          value: item.registration_no,
+          searchText: `${item.registration_no} ${item.student_name}`.toLowerCase()
         }));
         
         setRegistrationOptions(options);
@@ -227,12 +229,14 @@ const FeesEntryScreen = ({ navigation }) => {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <CustomPicker
+          <SearchablePicker
             label="Registration No *"
             selectedValue={formData.registrationNo}
             onValueChange={handleRegistrationSelect}
             items={registrationOptions}
             placeholder="Select registration number"
+            searchPlaceholder="Search by name or registration no..."
+            searchFields={['label', 'searchText']}
             error={errors.registrationNo}
           />
 
