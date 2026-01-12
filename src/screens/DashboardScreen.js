@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +16,6 @@ import { PieChart } from 'react-native-chart-kit';
 const DashboardScreen = ({ navigation }) => {
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -35,8 +33,6 @@ const DashboardScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -117,9 +113,7 @@ const DashboardScreen = ({ navigation }) => {
           <Ionicons name="menu" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Student Enquiry</Text>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.welcomeCard}>
@@ -184,8 +178,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.primary,
   },
-  notificationButton: {
-    padding: 8,
+  headerSpacer: {
+    width: 40, // Same width as menuButton to center the title
   },
   welcomeCard: {
     backgroundColor: COLORS.primary,

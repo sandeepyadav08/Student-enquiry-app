@@ -67,7 +67,13 @@ const BottomTabNavigator = () => {
     >
       <Tab.Screen 
         name="Home" 
-        component={DrawerNavigator} 
+        component={DrawerNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            // Always navigate to Dashboard when Home tab is pressed
+            navigation.navigate('Home', { screen: 'Dashboard' });
+          },
+        })}
       />
       <Tab.Screen 
         name="Payment" 
