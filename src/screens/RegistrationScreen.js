@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,34 +8,35 @@ import {
   TouchableOpacity,
   Platform,
   Modal,
-} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
-import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
-import CustomPicker from '../components/CustomPicker';
-import ApiService from '../api/apiService';
-import COLORS from '../constants/colors';
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
+import CustomInput from "../components/CustomInput";
+import CustomButton from "../components/CustomButton";
+import CustomPicker from "../components/CustomPicker";
+import ApiService from "../api/apiService";
+import { useTheme } from "../context/ThemeContext";
 
 const RegistrationScreen = ({ navigation, route }) => {
   const { enquiryData, editData, timestamp } = route.params || {};
-  
+  const { colors, isDark } = useTheme();
+
   const [formData, setFormData] = useState({
-    registrationNo: '',
-    studentName: enquiryData?.student_name || '',
-    parentHusbandName: '',
-    parentHusbandOccupation: '',
-    courseAdmissionSought: enquiryData?.course || '',
+    registrationNo: "",
+    studentName: enquiryData?.student_name || "",
+    parentHusbandName: "",
+    parentHusbandOccupation: "",
+    courseAdmissionSought: enquiryData?.course || "",
     dob: null,
-    address: enquiryData?.place || '',
-    contactNo: enquiryData?.contact_number || '',
-    guardianContactNo: '',
-    email: '',
-    category: '',
-    computerCourse: '',
-    medium: '',
+    address: enquiryData?.place || "",
+    contactNo: enquiryData?.contact_number || "",
+    guardianContactNo: "",
+    email: "",
+    category: "",
+    computerCourse: "",
+    medium: "",
     dateOfRegistration: new Date(),
-    registrationFees: '',
+    registrationFees: "",
   });
 
   const [activeDateField, setActiveDateField] = useState(null);
@@ -45,38 +46,47 @@ const RegistrationScreen = ({ navigation, route }) => {
   const scrollViewRef = useRef(null);
 
   const categoryOptions = [
-    { label: 'General', value: 'General' },
-    { label: 'OBC', value: 'OBC' },
-    { label: 'SC', value: 'SC' },
-    { label: 'ST', value: 'ST' },
-    { label: 'EWS', value: 'EWS' },
-    { label: 'Ex-Serviceman', value: 'Ex-Serviceman' },
-    { label: 'PH', value: 'PH' },
+    { label: "General", value: "General" },
+    { label: "OBC", value: "OBC" },
+    { label: "SC", value: "SC" },
+    { label: "ST", value: "ST" },
+    { label: "EWS", value: "EWS" },
+    { label: "Ex-Serviceman", value: "Ex-Serviceman" },
+    { label: "PH", value: "PH" },
   ];
 
   const mediumOptions = [
-    { label: 'Hindi', value: 'Hindi' },
-    { label: 'English', value: 'English' },
+    { label: "Hindi", value: "Hindi" },
+    { label: "English", value: "English" },
   ];
 
   useEffect(() => {
     if (editData) {
       setFormData({
-        registrationNo: editData.registration_no || '',
-        studentName: editData.student_name || '',
-        parentHusbandName: editData.parent_husband_name || '',
-        parentHusbandOccupation: editData.parent_husband_occupation || '',
-        courseAdmissionSought: editData.course_admission_sought || editData.course || '',
+        registrationNo: editData.registration_no || "",
+        studentName: editData.student_name || "",
+        parentHusbandName: editData.parent_husband_name || "",
+        parentHusbandOccupation: editData.parent_husband_occupation || "",
+        courseAdmissionSought:
+          editData.course_admission_sought || editData.course || "",
         dob: editData.dob ? new Date(editData.dob) : null,
-        address: editData.address || '',
-        contactNo: editData.contact_no || editData.contact_number || '',
-        guardianContactNo: editData.guardian_contact_no || '',
-        email: editData.email || '',
-        category: typeof editData.category === 'string' ? editData.category : (editData.category?.[0] || ''),
-        computerCourse: editData.computer_course || '',
-        medium: typeof editData.medium === 'string' ? editData.medium : (editData.medium?.[0] || ''),
-        dateOfRegistration: editData.date_of_registration ? new Date(editData.date_of_registration) : new Date(),
-        registrationFees: editData.registration_fees?.toString() || '',
+        address: editData.address || "",
+        contactNo: editData.contact_no || editData.contact_number || "",
+        guardianContactNo: editData.guardian_contact_no || "",
+        email: editData.email || "",
+        category:
+          typeof editData.category === "string"
+            ? editData.category
+            : editData.category?.[0] || "",
+        computerCourse: editData.computer_course || "",
+        medium:
+          typeof editData.medium === "string"
+            ? editData.medium
+            : editData.medium?.[0] || "",
+        dateOfRegistration: editData.date_of_registration
+          ? new Date(editData.date_of_registration)
+          : new Date(),
+        registrationFees: editData.registration_fees?.toString() || "",
       });
     } else {
       resetForm();
@@ -91,9 +101,9 @@ const RegistrationScreen = ({ navigation, route }) => {
   const fetchRegistrationNumber = async () => {
     try {
       const response = await ApiService.getRegistrationNumber();
-      setFormData(prev => ({ ...prev, registrationNo: response.data }));
+      setFormData((prev) => ({ ...prev, registrationNo: response.data }));
     } catch (error) {
-      console.error('Error fetching registration number:', error);
+      console.error("Error fetching registration number:", error);
     }
   };
 
@@ -101,37 +111,37 @@ const RegistrationScreen = ({ navigation, route }) => {
     const newErrors = {};
 
     if (!formData.studentName.trim()) {
-      newErrors.studentName = 'Student name is required';
+      newErrors.studentName = "Student name is required";
     }
 
     if (!formData.parentHusbandName.trim()) {
-      newErrors.parentHusbandName = 'Parent/Husband name is required';
+      newErrors.parentHusbandName = "Parent/Husband name is required";
     }
 
     if (!formData.courseAdmissionSought.trim()) {
-      newErrors.courseAdmissionSought = 'Course is required';
+      newErrors.courseAdmissionSought = "Course is required";
     }
 
     if (!formData.dob) {
-      newErrors.dob = 'Date of birth is required';
+      newErrors.dob = "Date of birth is required";
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = "Address is required";
     }
 
     if (!formData.contactNo.trim()) {
-      newErrors.contactNo = 'Contact number is required';
+      newErrors.contactNo = "Contact number is required";
     } else if (!/^\d{10}$/.test(formData.contactNo)) {
-      newErrors.contactNo = 'Contact number must be 10 digits';
+      newErrors.contactNo = "Contact number must be 10 digits";
     }
 
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = "Please enter a valid email";
     }
 
     if (!formData.registrationFees.trim()) {
-      newErrors.registrationFees = 'Registration fees is required';
+      newErrors.registrationFees = "Registration fees is required";
     }
 
     setErrors(newErrors);
@@ -139,7 +149,7 @@ const RegistrationScreen = ({ navigation, route }) => {
   };
 
   const handleBack = () => {
-    navigation.navigate('RegistrationList');
+    navigation.navigate("RegistrationList");
   };
 
   const handleSubmit = async () => {
@@ -153,7 +163,7 @@ const RegistrationScreen = ({ navigation, route }) => {
         guardian_name: formData.parentHusbandName,
         guardian_occupation: formData.parentHusbandOccupation,
         course: formData.courseAdmissionSought,
-        dob: formData.dob ? formData.dob.toISOString().split('T')[0] : '',
+        dob: formData.dob ? formData.dob.toISOString().split("T")[0] : "",
         address: formData.address,
         contact_no: formData.contactNo,
         guardian_contact_no: formData.guardianContactNo,
@@ -161,24 +171,26 @@ const RegistrationScreen = ({ navigation, route }) => {
         category: formData.category,
         computer_course: formData.computerCourse,
         medium: formData.medium,
-        registration_date: formData.dateOfRegistration.toISOString().split('T')[0],
+        registration_date: formData.dateOfRegistration
+          .toISOString()
+          .split("T")[0],
         registration_fees: formData.registrationFees,
         ...(enquiryData?.id && { enquiry_id: enquiryData.id }),
       };
 
       if (editData?.id) {
         await ApiService.updateRegistration(editData.id, submissionData);
-        Alert.alert('Success', 'Registration updated successfully', [
-          { text: 'OK', onPress: () => handleBack() }
+        Alert.alert("Success", "Registration updated successfully", [
+          { text: "OK", onPress: () => handleBack() },
         ]);
       } else {
         await ApiService.createRegistration(submissionData);
-        Alert.alert('Success', 'Registration created successfully', [
-          { text: 'OK', onPress: () => handleBack() }
+        Alert.alert("Success", "Registration created successfully", [
+          { text: "OK", onPress: () => handleBack() },
         ]);
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to save registration');
+      Alert.alert("Error", error.message || "Failed to save registration");
     } finally {
       setLoading(false);
     }
@@ -186,64 +198,64 @@ const RegistrationScreen = ({ navigation, route }) => {
 
   const resetForm = () => {
     setFormData({
-      registrationNo: '',
-      studentName: enquiryData?.student_name || '',
-      parentHusbandName: '',
-      parentHusbandOccupation: '',
-      courseAdmissionSought: enquiryData?.course || '',
+      registrationNo: "",
+      studentName: enquiryData?.student_name || "",
+      parentHusbandName: "",
+      parentHusbandOccupation: "",
+      courseAdmissionSought: enquiryData?.course || "",
       dob: null,
-      address: enquiryData?.place || '',
-      contactNo: enquiryData?.contact_number || '',
-      guardianContactNo: '',
-      email: '',
-      category: '',
-      computerCourse: '',
-      medium: '',
+      address: enquiryData?.place || "",
+      contactNo: enquiryData?.contact_number || "",
+      guardianContactNo: "",
+      email: "",
+      category: "",
+      computerCourse: "",
+      medium: "",
       dateOfRegistration: new Date(),
-      registrationFees: '',
+      registrationFees: "",
     });
     setErrors({});
   };
 
   const handleContactInput = (field, value) => {
-    const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    const numericValue = value.replace(/[^0-9]/g, "").slice(0, 10);
     updateFormData(field, numericValue);
   };
 
   const handleNumericInput = (field, value) => {
-    const numericValue = value.replace(/[^0-9]/g, '');
+    const numericValue = value.replace(/[^0-9]/g, "");
     updateFormData(field, numericValue);
   };
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const toggleCategory = (category) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      category: prev.category === category ? '' : category
+      category: prev.category === category ? "" : category,
     }));
   };
 
   const toggleMedium = (medium) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      medium: prev.medium === medium ? '' : medium
+      medium: prev.medium === medium ? "" : medium,
     }));
   };
 
   const handleDateChange = (event, selectedDate) => {
     // On Android, the picker closes automatically.
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setActiveDateField(null);
     }
-    
+
     if (selectedDate && activeDateField) {
-      setFormData(prev => ({ ...prev, [activeDateField]: selectedDate }));
+      setFormData((prev) => ({ ...prev, [activeDateField]: selectedDate }));
     }
   };
 
@@ -252,19 +264,24 @@ const RegistrationScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+    <View
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+    >
+      <View style={[styles.header, { backgroundColor: colors.white }]}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{editData ? 'Edit Registration' : 'Registration'}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {editData ? "Edit Registration" : "Registration"}
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.form}>
           <CustomInput
             label="Registration No"
@@ -276,7 +293,7 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Student Name *"
             value={formData.studentName}
-            onChangeText={(value) => updateFormData('studentName', value)}
+            onChangeText={(value) => updateFormData("studentName", value)}
             placeholder="Enter student name"
             editable={!enquiryData}
             error={errors.studentName}
@@ -286,7 +303,7 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Parent/Husband Name *"
             value={formData.parentHusbandName}
-            onChangeText={(value) => updateFormData('parentHusbandName', value)}
+            onChangeText={(value) => updateFormData("parentHusbandName", value)}
             placeholder="Enter parent/husband name"
             error={errors.parentHusbandName}
             autoCapitalize="words"
@@ -295,23 +312,33 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Parent/Husband Occupation"
             value={formData.parentHusbandOccupation}
-            onChangeText={(value) => updateFormData('parentHusbandOccupation', value)}
+            onChangeText={(value) =>
+              updateFormData("parentHusbandOccupation", value)
+            }
             placeholder="Enter occupation"
           />
 
           <CustomInput
             label="Course in which admission sought *"
             value={formData.courseAdmissionSought}
-            onChangeText={(value) => updateFormData('courseAdmissionSought', value)}
+            onChangeText={(value) =>
+              updateFormData("courseAdmissionSought", value)
+            }
             placeholder="Enter course"
             error={errors.courseAdmissionSought}
           />
 
-          <TouchableOpacity onPress={() => setActiveDateField('dob')}>
+          <TouchableOpacity onPress={() => setActiveDateField("dob")}>
             <View pointerEvents="none">
               <CustomInput
                 label="Date of Birth *"
-                value={formData.dob instanceof Date ? formData.dob.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
+                value={
+                  formData.dob instanceof Date
+                    ? formData.dob
+                        .toLocaleDateString("en-GB")
+                        .replace(/\//g, "-")
+                    : ""
+                }
                 editable={false}
                 placeholder="DD-MM-YYYY"
                 error={errors.dob}
@@ -322,7 +349,7 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Address *"
             value={formData.address}
-            onChangeText={(value) => updateFormData('address', value)}
+            onChangeText={(value) => updateFormData("address", value)}
             placeholder="Enter address"
             multiline
             error={errors.address}
@@ -331,7 +358,7 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Contact No *"
             value={formData.contactNo}
-            onChangeText={(value) => handleContactInput('contactNo', value)}
+            onChangeText={(value) => handleContactInput("contactNo", value)}
             placeholder="Enter 10-digit contact number"
             keyboardType="numeric"
             editable={!enquiryData}
@@ -342,7 +369,9 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Guardian Contact No"
             value={formData.guardianContactNo}
-            onChangeText={(value) => handleContactInput('guardianContactNo', value)}
+            onChangeText={(value) =>
+              handleContactInput("guardianContactNo", value)
+            }
             placeholder="Enter guardian contact number"
             keyboardType="numeric"
             maxLength={10}
@@ -351,7 +380,7 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Email"
             value={formData.email}
-            onChangeText={(value) => updateFormData('email', value)}
+            onChangeText={(value) => updateFormData("email", value)}
             placeholder="Enter email address"
             keyboardType="email-address"
             error={errors.email}
@@ -359,7 +388,9 @@ const RegistrationScreen = ({ navigation, route }) => {
           />
 
           <View style={styles.checkboxSection}>
-            <Text style={styles.sectionTitle}>Category</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Category
+            </Text>
             <View style={styles.checkboxContainer}>
               {categoryOptions.map((option) => (
                 <TouchableOpacity
@@ -367,15 +398,22 @@ const RegistrationScreen = ({ navigation, route }) => {
                   style={styles.checkboxItem}
                   onPress={() => toggleCategory(option.value)}
                 >
-                  <View style={[
-                    styles.checkbox,
-                    formData.category === option.value && styles.checkedBox
-                  ]}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      { borderColor: colors.primary },
+                      formData.category === option.value && {
+                        backgroundColor: colors.primary,
+                      },
+                    ]}
+                  >
                     {formData.category === option.value && (
-                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                     )}
                   </View>
-                  <Text style={styles.checkboxLabel}>{option.label}</Text>
+                  <Text style={[styles.checkboxLabel, { color: colors.text }]}>
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -384,12 +422,14 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Computer Course"
             value={formData.computerCourse}
-            onChangeText={(value) => updateFormData('computerCourse', value)}
+            onChangeText={(value) => updateFormData("computerCourse", value)}
             placeholder="Enter computer course"
           />
 
           <View style={styles.checkboxSection}>
-            <Text style={styles.sectionTitle}>Medium</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Medium
+            </Text>
             <View style={styles.checkboxContainer}>
               {mediumOptions.map((option) => (
                 <TouchableOpacity
@@ -397,46 +437,62 @@ const RegistrationScreen = ({ navigation, route }) => {
                   style={styles.checkboxItem}
                   onPress={() => toggleMedium(option.value)}
                 >
-                  <View style={[
-                    styles.checkbox,
-                    formData.medium === option.value && styles.checkedBox
-                  ]}>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      { borderColor: colors.primary },
+                      formData.medium === option.value && {
+                        backgroundColor: colors.primary,
+                      },
+                    ]}
+                  >
                     {formData.medium === option.value && (
-                      <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                     )}
                   </View>
-                  <Text style={styles.checkboxLabel}>{option.label}</Text>
+                  <Text style={[styles.checkboxLabel, { color: colors.text }]}>
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <TouchableOpacity onPress={() => setActiveDateField('dateOfRegistration')}>
+          <TouchableOpacity
+            onPress={() => setActiveDateField("dateOfRegistration")}
+          >
             <View pointerEvents="none">
               <CustomInput
                 label="Date of Registration"
-                value={formData.dateOfRegistration instanceof Date ? formData.dateOfRegistration.toLocaleDateString('en-GB').replace(/\//g, '-') : ''}
+                value={
+                  formData.dateOfRegistration instanceof Date
+                    ? formData.dateOfRegistration
+                        .toLocaleDateString("en-GB")
+                        .replace(/\//g, "-")
+                    : ""
+                }
                 editable={false}
                 placeholder="DD-MM-YYYY"
               />
             </View>
           </TouchableOpacity>
 
-          {activeDateField && Platform.OS === 'android' && (
+          {activeDateField && Platform.OS === "android" && (
             <DateTimePicker
               value={
-                (formData[activeDateField] instanceof Date) 
-                  ? formData[activeDateField] 
+                formData[activeDateField] instanceof Date
+                  ? formData[activeDateField]
                   : new Date()
               }
               mode="date"
               display="default"
               onChange={handleDateChange}
               maximumDate={new Date()}
+              themeVariant={isDark ? "dark" : "light"}
             />
           )}
 
-          {Platform.OS === 'ios' && (
+          {Platform.OS === "ios" && (
             <Modal
               transparent={true}
               animationType="slide"
@@ -444,18 +500,44 @@ const RegistrationScreen = ({ navigation, route }) => {
               onRequestClose={() => setActiveDateField(null)}
             >
               <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <View style={styles.modalHeader}>
+                <View
+                  style={[
+                    styles.modalContent,
+                    { backgroundColor: colors.white },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.modalHeader,
+                      {
+                        borderBottomColor: isDark ? "#374151" : "#F0F0F0",
+                        backgroundColor: colors.white,
+                      },
+                    ]}
+                  >
                     <TouchableOpacity onPress={() => setActiveDateField(null)}>
-                      <Text style={styles.modalButton}>Cancel</Text>
+                      <Text
+                        style={[styles.modalButton, { color: colors.text }]}
+                      >
+                        Cancel
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={confirmIOSDate}>
-                      <Text style={[styles.modalButton, styles.doneButton]}>Done</Text>
+                      <Text
+                        style={[
+                          styles.modalButton,
+                          styles.doneButton,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        Done
+                      </Text>
                     </TouchableOpacity>
                   </View>
                   <DateTimePicker
                     value={
-                      (activeDateField && formData[activeDateField] instanceof Date)
+                      activeDateField &&
+                      formData[activeDateField] instanceof Date
                         ? formData[activeDateField]
                         : new Date()
                     }
@@ -464,7 +546,7 @@ const RegistrationScreen = ({ navigation, route }) => {
                     onChange={handleDateChange}
                     maximumDate={new Date()}
                     style={styles.iosDatePicker}
-                    themeVariant="light"
+                    themeVariant={isDark ? "dark" : "light"}
                   />
                 </View>
               </View>
@@ -474,7 +556,9 @@ const RegistrationScreen = ({ navigation, route }) => {
           <CustomInput
             label="Registration Fees *"
             value={formData.registrationFees}
-            onChangeText={(value) => handleNumericInput('registrationFees', value)}
+            onChangeText={(value) =>
+              handleNumericInput("registrationFees", value)
+            }
             placeholder="Enter registration fees"
             keyboardType="numeric"
             error={errors.registrationFees}
@@ -495,17 +579,15 @@ const RegistrationScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.screenBackground,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: COLORS.white,
-    shadowColor: COLORS.black,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -519,8 +601,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: "bold",
   },
   placeholder: {
     width: 40,
@@ -538,38 +619,35 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 12,
-    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 15,
   },
   checkboxItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    minWidth: '45%',
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
   },
   checkbox: {
     width: 20,
     height: 20,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
     borderRadius: 4,
+    borderWidth: 2,
     marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkedBox: {
-    backgroundColor: COLORS.primary,
+    // This style is applied dynamically in the component
   },
   checkboxLabel: {
-    fontSize: 14,
-    color: COLORS.text,
+    fontSize: 15,
   },
   submitButton: {
     marginTop: 20,
@@ -577,33 +655,28 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: COLORS.white,
     borderRadius: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.white,
   },
   modalButton: {
-    color: COLORS.primary,
     fontSize: 17,
   },
   doneButton: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   iosDatePicker: {
     height: 320,
-    backgroundColor: COLORS.white,
   },
 });
 

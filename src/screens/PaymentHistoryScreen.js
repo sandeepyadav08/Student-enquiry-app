@@ -14,10 +14,12 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import ApiService from "../api/apiService";
+import { useTheme } from "../context/ThemeContext";
 import COLORS from "../constants/colors";
 
 const PaymentHistoryScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [registrationMapping, setRegistrationMapping] = useState({});
@@ -127,43 +129,78 @@ const PaymentHistoryScreen = ({ navigation }) => {
   };
 
   const renderPaymentItem = ({ item }) => (
-    <View style={styles.paymentCard}>
+    <View
+      style={[
+        styles.paymentCard,
+        {
+          backgroundColor: colors.white,
+          borderColor: isDark ? "#374151" : "#F0F0F0",
+        },
+      ]}
+    >
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.regNoLabel}>Registration No</Text>
-          <Text style={styles.regNoValue}>{item.registration_no}</Text>
-          <Text style={[styles.regNoLabel, { marginTop: 4 }]}>
-            Student Name
+          <Text style={[styles.label, { color: colors.placeholder }]}>
+            REGISTRATION NO
           </Text>
-          <Text style={styles.studentNameValue}>{getStudentName(item)}</Text>
+          <Text style={[styles.regNoValue, { color: colors.primary }]}>
+            {item.registration_no}
+          </Text>
         </View>
         <View style={styles.dateContainer}>
-          <Text style={styles.dateLabel}>Date</Text>
-          <Text style={styles.dateValue}>{formatDate(item.fee_date)}</Text>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.placeholder, textAlign: "right" },
+            ]}
+          >
+            DATE
+          </Text>
+          <Text style={[styles.dateValue, { color: colors.text }]}>
+            {formatDate(item.fee_date)}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.divider} />
+      <View style={styles.studentNameContainer}>
+        <Text style={[styles.label, { color: colors.placeholder }]}>
+          STUDENT NAME
+        </Text>
+        <Text style={[styles.studentNameValue, { color: colors.text }]}>
+          {getStudentName(item)}
+        </Text>
+      </View>
 
-      <View style={styles.cardBody}>
-        <View style={styles.amountRow}>
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+      <View style={[styles.cardBody, { gap: 12 }]}>
+        <View
+          style={[
+            styles.amountRow,
+            { backgroundColor: isDark ? "#1F2937" : "#F9F9F9" },
+          ]}
+        >
           <View style={styles.amountItem}>
-            <Text style={styles.amountLabel}>Total Fees</Text>
-            <Text style={styles.amountValue}>₹{item.total_fees}</Text>
+            <Text style={[styles.amountLabel, { color: colors.placeholder }]}>
+              Total Fees
+            </Text>
+            <Text style={[styles.amountValue, { color: colors.text }]}>
+              ₹{item.total_fees}
+            </Text>
           </View>
           <View style={styles.amountItem}>
-            <Text style={[styles.amountLabel, { color: COLORS.success }]}>
+            <Text style={[styles.amountLabel, { color: colors.success }]}>
               Paid Fees
             </Text>
-            <Text style={[styles.amountValue, { color: COLORS.success }]}>
+            <Text style={[styles.amountValue, { color: colors.success }]}>
               ₹{item.paid_fees}
             </Text>
           </View>
           <View style={styles.amountItem}>
-            <Text style={[styles.amountLabel, { color: COLORS.error }]}>
+            <Text style={[styles.amountLabel, { color: colors.error }]}>
               Due Fees
             </Text>
-            <Text style={[styles.amountValue, { color: COLORS.error }]}>
+            <Text style={[styles.amountValue, { color: colors.error }]}>
               ₹{item.due_fees}
             </Text>
           </View>
@@ -181,14 +218,16 @@ const PaymentHistoryScreen = ({ navigation }) => {
             <Ionicons
               name="card-outline"
               size={16}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.paymentInfoText}>
+            <Text
+              style={[styles.paymentInfoText, { color: colors.textSecondary }]}
+            >
               Paid Through: {item.paid_through}
             </Text>
           </View>
           <TouchableOpacity onPress={() => handleViewPaymentDetails(item)}>
-            <Ionicons name="eye-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="eye-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -197,7 +236,7 @@ const PaymentHistoryScreen = ({ navigation }) => {
             <Ionicons
               name="chatbubble-outline"
               size={16}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
             />
             <Text style={styles.paymentInfoText}>{item.remarks}</Text>
           </View>
@@ -207,34 +246,46 @@ const PaymentHistoryScreen = ({ navigation }) => {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Ionicons name="receipt-outline" size={64} color={COLORS.disabled} />
-      <Text style={styles.emptyTitle}>No Payment History</Text>
-      <Text style={styles.emptySubtitle}>No records of payments found.</Text>
+    <View style={styles.emptyContent}>
+      <Ionicons
+        name="receipt-outline"
+        size={64}
+        color={isDark ? "#4B5563" : "#E5E7EB"}
+      />
+      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+        No payment history found
+      </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+    >
       <View
         style={[
           styles.header,
-          { paddingTop: Math.max(insets.top, 20), paddingBottom: 20 },
+          { backgroundColor: colors.white },
+          { paddingTop: 50, paddingBottom: 20 },
         ]}
       >
-        <Text style={styles.headerTitle}>Payment History</Text>
+        <View style={{ width: 40 }} />
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Payment History
+        </Text>
+        <View style={{ width: 40 }} />
       </View>
 
       {loading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
           data={payments}
           renderItem={renderPaymentItem}
           keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshing={loading}
           onRefresh={fetchPaymentHistory}
@@ -249,63 +300,142 @@ const PaymentHistoryScreen = ({ navigation }) => {
         presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Payment Details</Text>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.5)" },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.white,
+                borderBottomColor: isDark ? "#374151" : "#F0F0F0",
+              },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Payment Details
+            </Text>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
               style={styles.closeButton}
             >
-              <Ionicons name="close" size={24} color={COLORS.text} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           {selectedPaymentDetails && (
             <ScrollView
-              style={styles.modalContent}
+              style={[
+                styles.modalScroll,
+                { backgroundColor: colors.screenBackground },
+              ]}
               showsVerticalScrollIndicator={false}
             >
               {/* Student Info Card */}
-              <View style={styles.detailCard}>
-                <View style={styles.detailCardHeader}>
+              <View
+                style={[styles.detailCard, { backgroundColor: colors.white }]}
+              >
+                <View
+                  style={[
+                    styles.detailCardHeader,
+                    {
+                      borderBottomColor: isDark
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="person-outline"
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
-                  <Text style={styles.detailCardTitle}>
+                  <Text
+                    style={[styles.detailCardTitle, { color: colors.text }]}
+                  >
                     Student Information
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Registration No</Text>
-                  <Text style={styles.detailValue}>
+                <View
+                  style={[
+                    styles.detailRow,
+                    { borderBottomColor: isDark ? "#374151" : "#F5F5F5" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.detailLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Registration No
+                  </Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>
                     {selectedPaymentDetails.item.registration_no}
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Student Name</Text>
-                  <Text style={styles.detailValue}>
+                <View
+                  style={[
+                    styles.detailRow,
+                    { borderBottomColor: isDark ? "#374151" : "#F5F5F5" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.detailLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Student Name
+                  </Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>
                     {selectedPaymentDetails.studentName}
                   </Text>
                 </View>
               </View>
 
               {/* Fee Summary Card */}
-              <View style={styles.detailCard}>
-                <View style={styles.detailCardHeader}>
+              <View
+                style={[styles.detailCard, { backgroundColor: colors.white }]}
+              >
+                <View
+                  style={[
+                    styles.detailCardHeader,
+                    {
+                      borderBottomColor: isDark
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="calculator-outline"
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
-                  <Text style={styles.detailCardTitle}>Fee Summary</Text>
+                  <Text
+                    style={[styles.detailCardTitle, { color: colors.text }]}
+                  >
+                    Fee Summary
+                  </Text>
                 </View>
                 <View style={styles.feeGrid}>
-                  <View style={styles.feeItem}>
-                    <Text style={styles.feeLabel}>Total Fees</Text>
+                  <View
+                    style={[
+                      styles.feeItem,
+                      { backgroundColor: isDark ? "#1F2937" : "#F9F9F9" },
+                    ]}
+                  >
                     <Text
-                      style={styles.feeValue}
+                      style={[styles.feeLabel, { color: colors.textSecondary }]}
+                    >
+                      Total Fees
+                    </Text>
+                    <Text
+                      style={[styles.feeValue, { color: colors.text }]}
                       adjustsFontSizeToFit={true}
                       numberOfLines={1}
                       minimumFontScale={0.7}
@@ -313,12 +443,19 @@ const PaymentHistoryScreen = ({ navigation }) => {
                       ₹{selectedPaymentDetails.details.fee.total_fees}
                     </Text>
                   </View>
-                  <View style={[styles.feeItem, styles.successFee]}>
-                    <Text style={[styles.feeLabel, { color: COLORS.success }]}>
+                  <View
+                    style={[
+                      styles.feeItem,
+                      isDark
+                        ? { backgroundColor: "#064E3B" }
+                        : styles.successFee,
+                    ]}
+                  >
+                    <Text style={[styles.feeLabel, { color: colors.success }]}>
                       Paid Fees
                     </Text>
                     <Text
-                      style={[styles.feeValue, { color: COLORS.success }]}
+                      style={[styles.feeValue, { color: colors.success }]}
                       adjustsFontSizeToFit={true}
                       numberOfLines={1}
                       minimumFontScale={0.7}
@@ -326,12 +463,17 @@ const PaymentHistoryScreen = ({ navigation }) => {
                       ₹{selectedPaymentDetails.details.fee.paid_fees}
                     </Text>
                   </View>
-                  <View style={[styles.feeItem, styles.errorFee]}>
-                    <Text style={[styles.feeLabel, { color: COLORS.error }]}>
+                  <View
+                    style={[
+                      styles.feeItem,
+                      isDark ? { backgroundColor: "#7F1D1D" } : styles.errorFee,
+                    ]}
+                  >
+                    <Text style={[styles.feeLabel, { color: colors.error }]}>
                       Due Fees
                     </Text>
                     <Text
-                      style={[styles.feeValue, { color: COLORS.error }]}
+                      style={[styles.feeValue, { color: colors.error }]}
                       adjustsFontSizeToFit={true}
                       numberOfLines={1}
                       minimumFontScale={0.7}
@@ -343,14 +485,27 @@ const PaymentHistoryScreen = ({ navigation }) => {
               </View>
 
               {/* Payment History Card */}
-              <View style={styles.detailCard}>
-                <View style={styles.detailCardHeader}>
+              <View
+                style={[styles.detailCard, { backgroundColor: colors.white }]}
+              >
+                <View
+                  style={[
+                    styles.detailCardHeader,
+                    {
+                      borderBottomColor: isDark
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="receipt-outline"
                     size={20}
-                    color={COLORS.primary}
+                    color={colors.primary}
                   />
-                  <Text style={styles.detailCardTitle}>
+                  <Text
+                    style={[styles.detailCardTitle, { color: colors.text }]}
+                  >
                     Payment Transactions
                   </Text>
                 </View>
@@ -358,12 +513,28 @@ const PaymentHistoryScreen = ({ navigation }) => {
                 selectedPaymentDetails.details.payments.length > 0 ? (
                   selectedPaymentDetails.details.payments.map(
                     (payment, index) => (
-                      <View key={index} style={styles.transactionCard}>
+                      <View
+                        key={index}
+                        style={[
+                          styles.transactionCard,
+                          { backgroundColor: isDark ? "#111827" : "#F9F9F9" },
+                        ]}
+                      >
                         <View style={styles.transactionHeader}>
-                          <Text style={styles.transactionNumber}>
+                          <Text
+                            style={[
+                              styles.transactionNumber,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             #{index + 1}
                           </Text>
-                          <Text style={styles.transactionAmount}>
+                          <Text
+                            style={[
+                              styles.transactionAmount,
+                              { color: colors.success },
+                            ]}
+                          >
                             ₹{payment.amount || "0.00"}
                           </Text>
                         </View>
@@ -372,9 +543,14 @@ const PaymentHistoryScreen = ({ navigation }) => {
                             <Ionicons
                               name="person-outline"
                               size={14}
-                              color={COLORS.textSecondary}
+                              color={colors.textSecondary}
                             />
-                            <Text style={styles.transactionText}>
+                            <Text
+                              style={[
+                                styles.transactionText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Received By:{" "}
                               {payment.received_by || "Not Specified"}
                             </Text>
@@ -383,9 +559,14 @@ const PaymentHistoryScreen = ({ navigation }) => {
                             <Ionicons
                               name="card-outline"
                               size={14}
-                              color={COLORS.textSecondary}
+                              color={colors.textSecondary}
                             />
-                            <Text style={styles.transactionText}>
+                            <Text
+                              style={[
+                                styles.transactionText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Method: {payment.payment_method || "N/A"}
                             </Text>
                           </View>
@@ -399,11 +580,16 @@ const PaymentHistoryScreen = ({ navigation }) => {
                               size={14}
                               color={
                                 payment.payment_status === "Success"
-                                  ? COLORS.success
-                                  : COLORS.error
+                                  ? colors.success
+                                  : colors.error
                               }
                             />
-                            <Text style={styles.transactionText}>
+                            <Text
+                              style={[
+                                styles.transactionText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Status: {payment.payment_status || "Success"}
                             </Text>
                           </View>
@@ -411,9 +597,14 @@ const PaymentHistoryScreen = ({ navigation }) => {
                             <Ionicons
                               name="calendar-outline"
                               size={14}
-                              color={COLORS.textSecondary}
+                              color={colors.textSecondary}
                             />
-                            <Text style={styles.transactionText}>
+                            <Text
+                              style={[
+                                styles.transactionText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Date: {formatDate(payment.payment_date)}
                             </Text>
                           </View>
@@ -426,9 +617,14 @@ const PaymentHistoryScreen = ({ navigation }) => {
                     <Ionicons
                       name="receipt-outline"
                       size={32}
-                      color={COLORS.disabled}
+                      color={colors.disabled}
                     />
-                    <Text style={styles.noTransactionsText}>
+                    <Text
+                      style={[
+                        styles.noTransactionsText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       No payment transactions found
                     </Text>
                   </View>
@@ -445,14 +641,13 @@ const PaymentHistoryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.screenBackground,
   },
   header: {
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.white,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: COLORS.black,
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -468,7 +663,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  listContainer: {
+  listContent: {
     padding: 16,
     paddingBottom: 40,
   },
@@ -491,7 +686,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  regNoLabel: {
+  label: {
     fontSize: 10,
     color: COLORS.textSecondary,
     textTransform: "uppercase",
@@ -502,6 +697,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.primary,
   },
+  studentNameContainer: {
+    marginBottom: 12,
+  },
   studentNameValue: {
     fontSize: 14,
     fontWeight: "600",
@@ -510,12 +708,6 @@ const styles = StyleSheet.create({
   dateContainer: {
     alignItems: "flex-end",
   },
-  dateLabel: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
   dateValue: {
     fontSize: 12,
     fontWeight: "500",
@@ -523,7 +715,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#F0F0F0",
     marginBottom: 12,
   },
   cardBody: {
@@ -532,7 +723,6 @@ const styles = StyleSheet.create({
   amountRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#F9F9F9",
     padding: 12,
     borderRadius: 12,
   },
@@ -558,56 +748,46 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textSecondary,
   },
-  emptyState: {
+  emptyContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 100,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.textSecondary,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: COLORS.placeholder,
+  emptyText: {
+    fontSize: 16,
+    marginTop: 12,
     textAlign: "center",
   },
-  // Modal Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: COLORS.screenBackground,
+    justifyContent: "flex-end",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.text,
   },
   closeButton: {
     padding: 4,
   },
-  modalContent: {
+  modalScroll: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   detailCard: {
-    backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: COLORS.black,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000", // Keep for elevation shadow
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -616,39 +796,37 @@ const styles = StyleSheet.create({
   detailCardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
-    gap: 8,
+    gap: 10,
+    marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)", // Reverted to static, dynamic override in component
   },
   detailCardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: "bold",
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
   },
   detailLabel: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    fontWeight: "500",
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "bold",
   },
   feeGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
+    gap: 10,
   },
   feeItem: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
     padding: 12,
     borderRadius: 12,
     alignItems: "center",
@@ -656,27 +834,30 @@ const styles = StyleSheet.create({
     minHeight: 70,
   },
   successFee: {
-    backgroundColor: "#F0F9F0",
+    backgroundColor: "#ECFDF5", // Specific light green for success background
   },
   errorFee: {
-    backgroundColor: "#FFF0F0",
+    backgroundColor: "#FEF2F2", // Specific light red for error background
   },
   feeLabel: {
     fontSize: 11,
-    color: COLORS.textSecondary,
-    marginBottom: 6,
-    textAlign: "center",
+    fontWeight: "600",
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
   feeValue: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: COLORS.text,
-    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  transactionsTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 12,
+    marginLeft: 4,
   },
   transactionCard: {
-    backgroundColor: "#F9F9F9",
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     marginBottom: 12,
   },
   transactionHeader: {
@@ -686,14 +867,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   transactionNumber: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "bold",
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.success,
+    fontWeight: "800",
   },
   transactionDetails: {
     gap: 6,
@@ -701,11 +880,11 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   transactionText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    fontWeight: "500",
   },
   noTransactions: {
     alignItems: "center",
@@ -713,7 +892,6 @@ const styles = StyleSheet.create({
   },
   noTransactionsText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginTop: 8,
   },
 });

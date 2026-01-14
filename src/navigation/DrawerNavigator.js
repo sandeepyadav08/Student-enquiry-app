@@ -1,44 +1,65 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
-import { Ionicons } from '@expo/vector-icons';
-import DashboardScreen from '../screens/DashboardScreen';
-import StudentEnquiryScreen from '../screens/StudentEnquiryScreen';
-import RegistrationScreen from '../screens/RegistrationScreen';
-import RegistrationListScreen from '../screens/RegistrationListScreen';
-import FeesEntryScreen from '../screens/FeesEntryScreen';
-import EnquiryListScreen from '../screens/EnquiryListScreen';
-import ApiService from '../api/apiService';
-import COLORS from '../constants/colors';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+} from "@react-navigation/drawer";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
+import DashboardScreen from "../screens/DashboardScreen";
+import StudentEnquiryScreen from "../screens/StudentEnquiryScreen";
+import RegistrationScreen from "../screens/RegistrationScreen";
+import RegistrationListScreen from "../screens/RegistrationListScreen";
+import FeesEntryScreen from "../screens/FeesEntryScreen";
+import EnquiryListScreen from "../screens/EnquiryListScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import ApiService from "../api/apiService";
 
 const Drawer = createDrawerNavigator();
 
 const CustomDrawerContent = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
+
   const menuItems = [
     {
-      title: 'Student Enquiry',
-      icon: 'list-outline',
-      onPress: () => navigation.navigate('EnquiryList'),
+      title: "Student Enquiry",
+      icon: "list-outline",
+      onPress: () => navigation.navigate("EnquiryList"),
     },
     {
-      title: 'Registration',
-      icon: 'clipboard-outline',
-      onPress: () => navigation.navigate('RegistrationList'),
+      title: "Registration",
+      icon: "clipboard-outline",
+      onPress: () => navigation.navigate("RegistrationList"),
     },
     {
-      title: 'Fees Entry',
-      icon: 'card-outline',
-      onPress: () => navigation.navigate('FeesEntry'),
+      title: "Fees Entry",
+      icon: "card-outline",
+      onPress: () => navigation.navigate("FeesEntry"),
+    },
+    {
+      title: "Settings",
+      icon: "settings-outline",
+      onPress: () => navigation.navigate("Settings"),
     },
   ];
 
   return (
-    <View style={styles.drawerContainer}>
+    <View style={[styles.drawerContainer, { backgroundColor: colors.white }]}>
       {/* New Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Menu</Text>
-        <TouchableOpacity onPress={() => navigation.closeDrawer()} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color={COLORS.primary} />
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: isDark ? "#374151" : "#F0F0F0" },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.primary }]}>
+          Menu
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.closeDrawer()}
+          style={styles.closeButton}
+        >
+          <Ionicons name="close" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -51,9 +72,11 @@ const CustomDrawerContent = ({ navigation }) => {
               onPress={item.onPress}
             >
               <View style={styles.iconContainer}>
-                 <Ionicons name={item.icon} size={24} color={COLORS.primary} />
+                <Ionicons name={item.icon} size={24} color={colors.primary} />
               </View>
-              <Text style={styles.menuText}>{item.title}</Text>
+              <Text style={[styles.menuText, { color: colors.text }]}>
+                {item.title}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -63,24 +86,30 @@ const CustomDrawerContent = ({ navigation }) => {
 };
 
 const DrawerNavigator = () => {
+  const { colors } = useTheme();
+
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerStyle: {
-          backgroundColor: COLORS.white,
+          backgroundColor: colors.white,
           width: 300,
         },
-        drawerType: 'front',
+        drawerType: "front",
       }}
     >
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
       <Drawer.Screen name="StudentEnquiry" component={StudentEnquiryScreen} />
-      <Drawer.Screen name="RegistrationList" component={RegistrationListScreen} />
+      <Drawer.Screen
+        name="RegistrationList"
+        component={RegistrationListScreen}
+      />
       <Drawer.Screen name="EnquiryList" component={EnquiryListScreen} />
       <Drawer.Screen name="Registration" component={RegistrationScreen} />
       <Drawer.Screen name="FeesEntry" component={FeesEntryScreen} />
+      <Drawer.Screen name="Settings" component={SettingsScreen} />
     </Drawer.Navigator>
   );
 };
@@ -88,22 +117,19 @@ const DrawerNavigator = () => {
 const styles = StyleSheet.create({
   drawerContainer: {
     flex: 1,
-    backgroundColor: COLORS.white,
     paddingTop: 50, // Safe area padding
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.disabledInput,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.primary,
+    fontWeight: "bold",
   },
   closeButton: {
     padding: 4,
@@ -115,21 +141,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 8,
     borderRadius: 8,
   },
   iconContainer: {
     width: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   menuText: {
     fontSize: 16,
-    color: COLORS.text,
     marginLeft: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

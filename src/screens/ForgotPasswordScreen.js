@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
-import ApiService from '../api/apiService';
-import COLORS from '../constants/colors';
+} from "react-native";
+import CustomInput from "../components/CustomInput";
+import CustomButton from "../components/CustomButton";
+import ApiService from "../api/apiService";
+import { useTheme } from "../context/ThemeContext";
 
 const ForgotPasswordScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const { colors } = useTheme();
 
   const validateEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
@@ -24,42 +25,54 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   const handleSendOTP = async () => {
     if (!email.trim()) {
-      setError('Email is required');
-      return;
-    }
-    
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email');
+      setError("Email is required");
       return;
     }
 
-    setError('');
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email");
+      return;
+    }
+
+    setError("");
     setLoading(true);
-    
+
     try {
       const response = await ApiService.forgotPassword(email);
-      if (response.status === true || response.status === 200 || response.status === 201) {
-        Alert.alert('Success', response.message || 'OTP sent to your email address');
-        navigation.navigate('ResetPassword', { email: email });
+      if (
+        response.status === true ||
+        response.status === 200 ||
+        response.status === 201
+      ) {
+        Alert.alert(
+          "Success",
+          response.message || "OTP sent to your email address"
+        );
+        navigation.navigate("ResetPassword", { email: email });
       } else {
-        Alert.alert('Error', response.message || 'Failed to send OTP');
+        Alert.alert("Error", response.message || "Failed to send OTP");
       }
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to send OTP. Please try again.');
+      Alert.alert(
+        "Error",
+        error.message || "Failed to send OTP. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.content}>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Forgot Password</Text>
-          
+        <View style={[styles.formContainer, { backgroundColor: colors.white }]}>
+          <Text style={[styles.title, { color: colors.primary }]}>
+            Forgot Password
+          </Text>
+
           <CustomInput
             placeholder="Enter your email"
             value={email}
@@ -77,11 +90,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
             style={styles.sendButton}
           />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Text style={styles.backText}>Back to Login</Text>
+            <Text style={[styles.backText, { color: colors.textSecondary }]}>
+              Back to Login
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -92,18 +107,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   formContainer: {
-    backgroundColor: COLORS.white,
     borderRadius: 24,
     padding: 32,
-    shadowColor: COLORS.black,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -114,9 +127,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 32,
   },
   inputStyle: {
@@ -126,12 +138,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   backButton: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   backText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
 });
 

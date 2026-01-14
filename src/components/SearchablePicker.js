@@ -1,40 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Modal, 
-  FlatList, 
-  TextInput 
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  TextInput,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
-const SearchablePicker = ({ 
-  label, 
-  selectedValue, 
-  onValueChange, 
-  items, 
+const SearchablePicker = ({
+  label,
+  selectedValue,
+  onValueChange,
+  items,
   placeholder = "Select an option",
   searchPlaceholder = "Search...",
   style,
   error,
-  searchFields = ['label'] // Fields to search in
+  searchFields = ["label"], // Fields to search in
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredItems, setFilteredItems] = useState(items);
+  const { colors, isDark } = useTheme();
 
-  const selectedItem = items.find(item => item.value === selectedValue);
+  const selectedItem = items.find((item) => item.value === selectedValue);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredItems(items);
     } else {
-      const filtered = items.filter(item => {
-        return searchFields.some(field => {
-          const fieldValue = item[field] || '';
+      const filtered = items.filter((item) => {
+        return searchFields.some((field) => {
+          const fieldValue = item[field] || "";
           return fieldValue.toLowerCase().includes(searchQuery.toLowerCase());
         });
       });
@@ -45,35 +46,47 @@ const SearchablePicker = ({
   const handleSelect = (item) => {
     onValueChange(item.value);
     setModalVisible(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const openModal = () => {
     setModalVisible(true);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const closeModal = () => {
     setModalVisible(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      
-      <TouchableOpacity 
-        style={[styles.pickerTrigger, error && styles.errorContainer]}
+      {label && (
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      )}
+
+      <TouchableOpacity
+        style={[
+          styles.pickerTrigger,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.inputBackground,
+          },
+          error && { borderColor: colors.error },
+        ]}
         onPress={openModal}
         activeOpacity={0.7}
       >
-        <Text style={[
-          styles.textValue, 
-          !selectedValue && styles.placeholderText
-        ]}>
+        <Text
+          style={[
+            styles.textValue,
+            { color: colors.text },
+            !selectedValue && { color: colors.placeholder },
+          ]}
+        >
           {selectedItem ? selectedItem.label : placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={20} color={COLORS.textSecondary} />
+        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
 
       <Modal
@@ -82,69 +95,110 @@ const SearchablePicker = ({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={closeModal}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label || 'Select Option'}</Text>
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.white }]}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: isDark ? "#374151" : "#F0F0F0",
+                  backgroundColor: colors.white,
+                },
+              ]}
+            >
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {label || "Select Option"}
+              </Text>
               <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            
+
             {/* Search Input */}
-            <View style={styles.searchContainer}>
-              <View style={styles.searchInputContainer}>
-                <Ionicons 
-                  name="search" 
-                  size={20} 
-                  color={COLORS.textSecondary} 
+            <View
+              style={[
+                styles.searchContainer,
+                { borderBottomColor: isDark ? "#374151" : "#F0F0F0" },
+              ]}
+            >
+              <View
+                style={[
+                  styles.searchInputContainer,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.inputBackground,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={colors.textSecondary}
                   style={styles.searchIcon}
                 />
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { color: colors.text }]}
                   placeholder={searchPlaceholder}
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity 
-                    onPress={() => setSearchQuery('')}
+                  <TouchableOpacity
+                    onPress={() => setSearchQuery("")}
                     style={styles.clearButton}
                   >
-                    <Ionicons name="close-circle" size={20} color={COLORS.textSecondary} />
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={colors.textSecondary}
+                    />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
-            
+
             {/* Results */}
             {filteredItems.length > 0 ? (
               <FlatList
                 data={filteredItems}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[
                       styles.itemRow,
-                      selectedValue === item.value && styles.selectedItemRow
+                      selectedValue === item.value && {
+                        backgroundColor: colors.primary + "20",
+                      },
                     ]}
                     onPress={() => handleSelect(item)}
                   >
-                    <Text style={[
-                      styles.itemText,
-                      selectedValue === item.value && styles.selectedItemText
-                    ]}>
+                    <Text
+                      style={[
+                        styles.itemText,
+                        { color: colors.text },
+                        selectedValue === item.value && {
+                          color: colors.primary,
+                          fontWeight: "600",
+                        },
+                      ]}
+                    >
                       {item.label}
                     </Text>
                     {selectedValue === item.value && (
-                      <Ionicons name="checkmark" size={20} color={COLORS.primary} />
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color={colors.primary}
+                      />
                     )}
                   </TouchableOpacity>
                 )}
@@ -154,9 +208,20 @@ const SearchablePicker = ({
               />
             ) : (
               <View style={styles.noResultsContainer}>
-                <Ionicons name="search" size={48} color={COLORS.textSecondary} />
-                <Text style={styles.noResultsText}>No results found</Text>
-                <Text style={styles.noResultsSubtext}>
+                <Ionicons
+                  name="search"
+                  size={48}
+                  color={colors.textSecondary}
+                />
+                <Text style={[styles.noResultsText, { color: colors.text }]}>
+                  No results found
+                </Text>
+                <Text
+                  style={[
+                    styles.noResultsSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Try adjusting your search terms
                 </Text>
               </View>
@@ -165,7 +230,9 @@ const SearchablePicker = ({
         </TouchableOpacity>
       </Modal>
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };
@@ -176,84 +243,66 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
-    color: COLORS.text,
   },
   pickerTrigger: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: COLORS.inputBackground,
     minHeight: 50,
   },
   textValue: {
     fontSize: 16,
-    color: COLORS.text,
     flex: 1,
   },
-  placeholderText: {
-    color: COLORS.placeholder,
-  },
-  errorContainer: {
-    borderColor: COLORS.error,
-  },
   errorText: {
-    color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   modalContent: {
-    backgroundColor: COLORS.white,
     borderRadius: 20,
-    width: '100%',
-    maxHeight: '80%',
-    shadowColor: COLORS.black,
+    width: "100%",
+    maxHeight: "80%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.disabledInput,
-    backgroundColor: COLORS.white,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
+    fontWeight: "600",
   },
   searchContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.disabledInput,
   },
   searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 12,
-    backgroundColor: COLORS.inputBackground,
     minHeight: 44,
   },
   searchIcon: {
@@ -262,7 +311,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: COLORS.text,
     paddingVertical: 8,
   },
   clearButton: {
@@ -273,41 +321,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
-  selectedItemRow: {
-    backgroundColor: COLORS.primary + '10',
-  },
   itemText: {
     fontSize: 16,
-    color: COLORS.text,
     flex: 1,
   },
-  selectedItemText: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
   noResultsContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
   noResultsText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
+    fontWeight: "600",
     marginTop: 16,
     marginBottom: 8,
   },
   noResultsSubtext: {
     fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

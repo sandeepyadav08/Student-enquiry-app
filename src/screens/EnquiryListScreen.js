@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,48 +9,53 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import CustomInput from '../components/CustomInput';
-import ApiService from '../api/apiService';
-import COLORS from '../constants/colors';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import CustomInput from "../components/CustomInput";
+import ApiService from "../api/apiService";
+import { useTheme } from "../context/ThemeContext";
 
 const EnquiryListScreen = ({ navigation }) => {
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingRegistrationId, setLoadingRegistrationId] = useState(null);
+  const { colors, isDark } = useTheme();
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB').replace(/\//g, '-');
+    return date.toLocaleDateString("en-GB").replace(/\//g, "-");
   };
 
   const formatDateTime = (dateTimeString) => {
-    if (!dateTimeString || dateTimeString === 'N/A' || dateTimeString.includes('0000-00-00')) {
-      return 'N/A';
+    if (
+      !dateTimeString ||
+      dateTimeString === "N/A" ||
+      dateTimeString.includes("0000-00-00")
+    ) {
+      return "N/A";
     }
-    
+
     const date = new Date(dateTimeString);
-    if (isNaN(date.getTime()) || date.getFullYear() < 1900) return 'N/A';
-    
-    const formattedDate = date.toLocaleDateString('en-GB').replace(/\//g, '-');
-    const formattedTime = date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
+    if (isNaN(date.getTime()) || date.getFullYear() < 1900) return "N/A";
+
+    const formattedDate = date.toLocaleDateString("en-GB").replace(/\//g, "-");
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
-    
+
     return `${formattedDate} ${formattedTime}`;
   };
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+    const unsubscribe = navigation.addListener("focus", () => {
       fetchEnquiries();
     });
     return unsubscribe;
@@ -65,7 +70,7 @@ const EnquiryListScreen = ({ navigation }) => {
       const response = await ApiService.getEnquiries();
       setEnquiries(response.data || []);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch enquiries');
+      Alert.alert("Error", "Failed to fetch enquiries");
     } finally {
       setLoading(false);
     }
@@ -78,7 +83,7 @@ const EnquiryListScreen = ({ navigation }) => {
       const response = await ApiService.getEnquiryDetails(id);
       setSelectedEnquiry(response.data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to fetch enquiry details');
+      Alert.alert("Error", "Failed to fetch enquiry details");
       setDetailsModalVisible(false);
     } finally {
       setLoadingDetails(false);
@@ -87,19 +92,22 @@ const EnquiryListScreen = ({ navigation }) => {
 
   const handleEditEnquiry = () => {
     setDetailsModalVisible(false);
-    navigation.navigate('StudentEnquiry', { editData: selectedEnquiry });
+    navigation.navigate("StudentEnquiry", { editData: selectedEnquiry });
   };
 
   const handleRegistration = async (item) => {
     setLoadingRegistrationId(item.id);
     try {
       const response = await ApiService.getEnquiryRegistrationData(item.id);
-      navigation.navigate('Registration', { 
+      navigation.navigate("Registration", {
         enquiryData: response.data,
-        timestamp: new Date().getTime() // Force refresh if already on screen
+        timestamp: new Date().getTime(), // Force refresh if already on screen
       });
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to fetch registration data');
+      Alert.alert(
+        "Error",
+        error.message || "Failed to fetch registration data"
+      );
     } finally {
       setLoadingRegistrationId(null);
     }
@@ -111,65 +119,91 @@ const EnquiryListScreen = ({ navigation }) => {
       return;
     }
 
-    const filtered = enquiries.filter(enquiry =>
-      enquiry.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enquiry.contact_number.includes(searchQuery)
+    const filtered = enquiries.filter(
+      (enquiry) =>
+        enquiry.student_name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        enquiry.contact_number.includes(searchQuery)
     );
     setFilteredEnquiries(filtered);
   };
 
-
-
   const renderEnquiryItem = ({ item }) => (
-    <View
-      style={styles.enquiryCard}
-    >
+    <View style={[styles.enquiryCard, { backgroundColor: colors.white }]}>
       <View style={styles.enquiryHeader}>
-        <Text style={styles.studentName}>{item.student_name}</Text>
-        <Text style={styles.date}>{formatDate(item.enquiry_date)}</Text>
+        <Text style={[styles.studentName, { color: colors.text }]}>
+          {item.student_name}
+        </Text>
+        <Text style={[styles.date, { color: colors.textSecondary }]}>
+          {formatDate(item.enquiry_date)}
+        </Text>
       </View>
-      
+
       <View style={styles.enquiryDetails}>
         <View style={styles.detailRow}>
-          <Ionicons name="call" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>{item.contact_number}</Text>
+          <Ionicons name="call" size={16} color={colors.textSecondary} />
+          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
+            {item.contact_number}
+          </Text>
         </View>
-        
+
         <View style={styles.detailRow}>
-          <Ionicons name="school" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>{item.course}</Text>
+          <Ionicons name="school" size={16} color={colors.textSecondary} />
+          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
+            {item.course}
+          </Text>
         </View>
-        
+
         <View style={styles.detailRow}>
-          <Ionicons name="business" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.detailText}>{item.franchisee}</Text>
+          <Ionicons name="business" size={16} color={colors.textSecondary} />
+          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
+            {item.franchisee}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.enquiryFooter}>
+      <View
+        style={[
+          styles.enquiryFooter,
+          { borderTopColor: isDark ? "#374151" : "#F0F0F0" },
+        ]}
+      >
         <View style={styles.footerInfo}>
-          <Text style={styles.counsellor}>Counsellor: {item.counsellor_name || 'N/A'}</Text>
+          <Text style={[styles.counsellor, { color: colors.textSecondary }]}>
+            Counsellor: {item.counsellor_name || "N/A"}
+          </Text>
         </View>
         <View style={styles.actionButtons}>
-          {item.register_status === '1' ? (
-            <Text style={styles.registeredText}>Registered</Text>
+          {item.register_status === "1" ? (
+            <Text style={[styles.registeredText, { color: colors.success }]}>
+              Registered
+            </Text>
           ) : (
             <>
               {loadingRegistrationId === item.id ? (
-                <ActivityIndicator size="small" color={COLORS.primary} style={{ marginRight: 8 }} />
+                <ActivityIndicator
+                  size="small"
+                  color={colors.primary}
+                  style={{ marginRight: 8 }}
+                />
               ) : (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => handleRegistration(item)}
                   style={styles.iconButton}
                 >
-                  <Ionicons name="person-add-outline" size={24} color={COLORS.primary} />
+                  <Ionicons
+                    name="person-add-outline"
+                    size={24}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => handleViewDetails(item.id)}
                 style={styles.iconButton}
               >
-                <Ionicons name="eye-outline" size={24} color={COLORS.primary} />
+                <Ionicons name="eye-outline" size={24} color={colors.primary} />
               </TouchableOpacity>
             </>
           )}
@@ -180,33 +214,47 @@ const EnquiryListScreen = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="document-text-outline" size={64} color={COLORS.disabled} />
-      <Text style={styles.emptyTitle}>No Enquiries Found</Text>
-      <Text style={styles.emptySubtitle}>
-        {searchQuery ? 'Try adjusting your search' : 'Create your first enquiry'}
+      <Ionicons
+        name="document-text-outline"
+        size={64}
+        color={colors.disabled}
+      />
+      <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+        No Enquiries Found
+      </Text>
+      <Text style={[styles.emptySubtitle, { color: colors.placeholder }]}>
+        {searchQuery
+          ? "Try adjusting your search"
+          : "Create your first enquiry"}
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+    >
+      <View style={[styles.header, { backgroundColor: colors.white }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+          <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Enquiry List</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Enquiry List
+        </Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('StudentEnquiry', { editData: null })}
+          onPress={() =>
+            navigation.navigate("StudentEnquiry", { editData: null })
+          }
           style={styles.addButton}
         >
-          <Ionicons name="add" size={24} color={COLORS.primary} />
+          <Ionicons name="add" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.white }]}>
         <CustomInput
           placeholder="Search by name or contact number"
           value={searchQuery}
@@ -233,88 +281,258 @@ const EnquiryListScreen = ({ navigation }) => {
         onRequestClose={() => setDetailsModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Enquiry Details</Text>
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.white }]}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                { borderBottomColor: isDark ? "#374151" : "#F0F0F0" },
+              ]}
+            >
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Enquiry Details
+              </Text>
               <TouchableOpacity onPress={() => setDetailsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             {loadingDetails ? (
               <View style={styles.modalLoading}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
-            ) : selectedEnquiry && (
-              <>
-                <ScrollView 
-                  style={styles.detailsScroll}
-                  contentContainerStyle={styles.scrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Student Name</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.student_name}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Date</Text>
-                    <Text style={styles.detailValue}>{formatDate(selectedEnquiry.enquiry_date)}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Contact Number</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.contact_number}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>WhatsApp Number</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.whatsapp_number || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Course</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.course}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Franchisee</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.franchisee}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Mode of Reference</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.reference_mode || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Counsellor</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.counsellor_name || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Place</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.place || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Remarks</Text>
-                    <Text style={styles.detailValue}>{selectedEnquiry.remarks || 'N/A'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Follow Up 1</Text>
-                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_1)}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Follow Up 2</Text>
-                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_2)}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Follow Up 3</Text>
-                    <Text style={styles.detailValue}>{formatDateTime(selectedEnquiry.follow_up_3)}</Text>
-                  </View>
-                </ScrollView>
-                <View style={styles.modalFooter}>
-                  <TouchableOpacity 
-                    style={styles.editButton}
-                    onPress={handleEditEnquiry}
+            ) : (
+              selectedEnquiry && (
+                <>
+                  <ScrollView
+                    style={styles.detailsScroll}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
                   >
-                    <Ionicons name="create-outline" size={20} color={COLORS.white} />
-                    <Text style={styles.editButtonText}>Edit Details</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Student Name
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.student_name}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Date
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {formatDate(selectedEnquiry.enquiry_date)}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Contact Number
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.contact_number}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        WhatsApp Number
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.whatsapp_number || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Course
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.course}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Franchisee
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.franchisee}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Mode of Reference
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.reference_mode || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Counsellor
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.counsellor_name || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Place
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.place || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Remarks
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {selectedEnquiry.remarks || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Follow Up 1
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {formatDateTime(selectedEnquiry.follow_up_1)}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Follow Up 2
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {formatDateTime(selectedEnquiry.follow_up_2)}
+                      </Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Follow Up 3
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
+                        {formatDateTime(selectedEnquiry.follow_up_3)}
+                      </Text>
+                    </View>
+                  </ScrollView>
+                  <View
+                    style={[
+                      styles.modalFooter,
+                      { borderTopColor: isDark ? "#374151" : "#F0F0F0" },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        styles.editButton,
+                        { backgroundColor: colors.primary },
+                      ]}
+                      onPress={handleEditEnquiry}
+                    >
+                      <Ionicons
+                        name="create-outline"
+                        size={20}
+                        color={colors.white}
+                      />
+                      <Text
+                        style={[styles.editButtonText, { color: colors.white }]}
+                      >
+                        Edit Details
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )
             )}
           </View>
         </View>
@@ -326,17 +544,15 @@ const EnquiryListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.screenBackground,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    backgroundColor: COLORS.white,
-    shadowColor: COLORS.black,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -350,8 +566,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: "bold",
   },
   addButton: {
     padding: 8,
@@ -359,7 +574,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: COLORS.white,
   },
   searchInput: {
     marginBottom: 0,
@@ -369,11 +583,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   enquiryCard: {
-    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: COLORS.black,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -383,48 +596,44 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   enquiryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   studentName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: "bold",
     flex: 1,
   },
   date: {
     fontSize: 12,
-    color: COLORS.textSecondary,
   },
   enquiryDetails: {
     marginBottom: 12,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   detailText: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginLeft: 8,
   },
   enquiryFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: COLORS.disabledInput,
   },
   footerInfo: {
     flex: 1,
   },
   actionButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   iconButton: {
@@ -432,102 +641,90 @@ const styles = StyleSheet.create({
   },
   registeredText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.success,
+    fontWeight: "bold",
   },
   counsellor: {
     fontSize: 12,
-    color: COLORS.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 60,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.textSecondary,
+    fontWeight: "bold",
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: COLORS.placeholder,
-    textAlign: 'center',
+    textAlign: "center",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: COLORS.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '80%',
-    width: '100%',
+    height: "80%",
+    width: "100%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 24,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.disabledInput,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: "bold",
   },
   modalLoading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   detailsScroll: {
     flex: 1,
     padding: 24,
   },
   scrollContent: {
-    paddingBottom: 40, // Sufficient padding at bottom for the last item
+    paddingBottom: 40,
   },
   detailItem: {
     marginBottom: 20,
   },
   detailLabel: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     marginBottom: 4,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   detailValue: {
     fontSize: 16,
-    color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   modalFooter: {
     padding: 24,
     borderTopWidth: 1,
-    borderTopColor: COLORS.disabledInput,
   },
   editButton: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     gap: 8,
   },
   editButtonText: {
-    color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

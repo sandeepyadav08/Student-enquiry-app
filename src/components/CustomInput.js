@@ -1,29 +1,40 @@
-import React from 'react';
-import { View, TextInput, Text, StyleSheet } from 'react-native';
-import COLORS from '../constants/colors';
+import { View, TextInput, Text, StyleSheet } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
-const CustomInput = ({ 
-  label, 
-  value, 
-  onChangeText, 
-  placeholder, 
+const CustomInput = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
   secureTextEntry = false,
-  keyboardType = 'default',
+  keyboardType = "default",
   editable = true,
   multiline = false,
   style,
   error,
   ...props
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      )}
       <TextInput
         style={[
-          styles.input, 
+          styles.input,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.inputBackground,
+            color: colors.text,
+          },
           multiline && styles.multilineInput,
-          !editable && styles.disabledInput,
-          error && styles.errorInput
+          !editable && {
+            backgroundColor: colors.disabledInput,
+            color: colors.textSecondary,
+          },
+          error && { borderColor: colors.error },
         ]}
         value={value}
         onChangeText={onChangeText}
@@ -32,10 +43,12 @@ const CustomInput = ({
         keyboardType={keyboardType}
         editable={editable}
         multiline={multiline}
-        placeholderTextColor={COLORS.placeholder}
+        placeholderTextColor={colors.placeholder}
         {...props}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };
@@ -46,32 +59,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
-    color: COLORS.text,
   },
   input: {
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: COLORS.inputBackground,
   },
   multilineInput: {
     height: 100,
-    textAlignVertical: 'top',
-  },
-  disabledInput: {
-    backgroundColor: COLORS.disabledInput,
-    color: COLORS.textSecondary,
-  },
-  errorInput: {
-    borderColor: COLORS.error,
+    textAlignVertical: "top",
   },
   errorText: {
-    color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
   },

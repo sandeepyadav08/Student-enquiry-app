@@ -1,21 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
-const CustomPicker = ({ 
-  label, 
-  selectedValue, 
-  onValueChange, 
-  items, 
+const CustomPicker = ({
+  label,
+  selectedValue,
+  onValueChange,
+  items,
   placeholder = "Select an option",
   style,
-  error 
+  error,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const { colors, isDark } = useTheme();
 
-  const selectedItem = items.find(item => item.value === selectedValue);
+  const selectedItem = items.find((item) => item.value === selectedValue);
 
   const handleSelect = (item) => {
     onValueChange(item.value);
@@ -24,20 +31,32 @@ const CustomPicker = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      
-      <TouchableOpacity 
-        style={[styles.pickerTrigger, error && styles.errorContainer]}
+      {label && (
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      )}
+
+      <TouchableOpacity
+        style={[
+          styles.pickerTrigger,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.inputBackground,
+          },
+          error && { borderColor: colors.error },
+        ]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={[
-          styles.textValue, 
-          !selectedValue && styles.placeholderText
-        ]}>
+        <Text
+          style={[
+            styles.textValue,
+            { color: colors.text },
+            !selectedValue && { color: colors.placeholder },
+          ]}
+        >
           {selectedItem ? selectedItem.label : placeholder}
         </Text>
-        <Ionicons name="chevron-down" size={20} color={COLORS.textSecondary} />
+        <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
 
       <Modal
@@ -46,38 +65,62 @@ const CustomPicker = ({
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setModalVisible(false)}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{label || 'Select Option'}</Text>
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.white }]}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                {
+                  borderBottomColor: isDark ? "#374151" : "#F0F0F0",
+                  backgroundColor: colors.white,
+                },
+              ]}
+            >
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {label || "Select Option"}
+              </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            
+
             <FlatList
               data={items}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[
                     styles.itemRow,
-                    selectedValue === item.value && styles.selectedItemRow
+                    selectedValue === item.value && {
+                      backgroundColor: colors.primary + "20",
+                    },
                   ]}
                   onPress={() => handleSelect(item)}
                 >
-                  <Text style={[
-                    styles.itemText,
-                    selectedValue === item.value && styles.selectedItemText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.itemText,
+                      { color: colors.text },
+                      selectedValue === item.value && {
+                        color: colors.primary,
+                        fontWeight: "600",
+                      },
+                    ]}
+                  >
                     {item.label}
                   </Text>
                   {selectedValue === item.value && (
-                    <Ionicons name="checkmark" size={20} color={COLORS.primary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={colors.primary}
+                    />
                   )}
                 </TouchableOpacity>
               )}
@@ -88,7 +131,9 @@ const CustomPicker = ({
         </TouchableOpacity>
       </Modal>
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };
@@ -99,91 +144,68 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 8,
-    color: COLORS.text,
   },
   pickerTrigger: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: COLORS.inputBackground,
     minHeight: 50,
   },
   textValue: {
     fontSize: 16,
-    color: COLORS.text,
     flex: 1,
   },
-  placeholderText: {
-    color: COLORS.placeholder,
-  },
-  errorContainer: {
-    borderColor: COLORS.error,
-  },
   errorText: {
-    color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   modalContent: {
-    backgroundColor: COLORS.white,
     borderRadius: 20,
-    width: '100%',
-    maxHeight: '70%',
-    shadowColor: COLORS.black,
+    width: "100%",
+    maxHeight: "70%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.disabledInput,
-    backgroundColor: COLORS.white,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
+    fontWeight: "600",
   },
   listContent: {
     paddingVertical: 8,
   },
   itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 20,
   },
-  selectedItemRow: {
-    backgroundColor: COLORS.primary + '10',
-  },
   itemText: {
     fontSize: 16,
-    color: COLORS.text,
-  },
-  selectedItemText: {
-    color: COLORS.primary,
-    fontWeight: '600',
   },
 });
 
