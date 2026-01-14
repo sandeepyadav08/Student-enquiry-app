@@ -27,12 +27,12 @@ const PaymentHistoryScreen = ({ navigation }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    
+
     // Handle the API date format: "10-01-2026 03:14 PM"
-    if (dateString.includes(' ')) {
+    if (dateString.includes(" ")) {
       return dateString; // Return full date and time
     }
-    
+
     // Fallback for other date formats
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "N/A";
@@ -109,7 +109,7 @@ const PaymentHistoryScreen = ({ navigation }) => {
         setSelectedPaymentDetails({
           item,
           details: response.data,
-          studentName: getStudentName(item)
+          studentName: getStudentName(item),
         });
         setModalVisible(true);
       } else {
@@ -261,41 +261,83 @@ const PaymentHistoryScreen = ({ navigation }) => {
           </View>
 
           {selectedPaymentDetails && (
-            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.modalContent}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Student Info Card */}
               <View style={styles.detailCard}>
                 <View style={styles.detailCardHeader}>
-                  <Ionicons name="person-outline" size={20} color={COLORS.primary} />
-                  <Text style={styles.detailCardTitle}>Student Information</Text>
+                  <Ionicons
+                    name="person-outline"
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.detailCardTitle}>
+                    Student Information
+                  </Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Registration No</Text>
-                  <Text style={styles.detailValue}>{selectedPaymentDetails.item.registration_no}</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedPaymentDetails.item.registration_no}
+                  </Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Student Name</Text>
-                  <Text style={styles.detailValue}>{selectedPaymentDetails.studentName}</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedPaymentDetails.studentName}
+                  </Text>
                 </View>
               </View>
 
               {/* Fee Summary Card */}
               <View style={styles.detailCard}>
                 <View style={styles.detailCardHeader}>
-                  <Ionicons name="calculator-outline" size={20} color={COLORS.primary} />
+                  <Ionicons
+                    name="calculator-outline"
+                    size={20}
+                    color={COLORS.primary}
+                  />
                   <Text style={styles.detailCardTitle}>Fee Summary</Text>
                 </View>
                 <View style={styles.feeGrid}>
                   <View style={styles.feeItem}>
                     <Text style={styles.feeLabel}>Total Fees</Text>
-                    <Text style={styles.feeValue}>₹{selectedPaymentDetails.details.fee.total_fees}</Text>
+                    <Text
+                      style={styles.feeValue}
+                      adjustsFontSizeToFit={true}
+                      numberOfLines={1}
+                      minimumFontScale={0.7}
+                    >
+                      ₹{selectedPaymentDetails.details.fee.total_fees}
+                    </Text>
                   </View>
                   <View style={[styles.feeItem, styles.successFee]}>
-                    <Text style={[styles.feeLabel, { color: COLORS.success }]}>Paid Fees</Text>
-                    <Text style={[styles.feeValue, { color: COLORS.success }]}>₹{selectedPaymentDetails.details.fee.paid_fees}</Text>
+                    <Text style={[styles.feeLabel, { color: COLORS.success }]}>
+                      Paid Fees
+                    </Text>
+                    <Text
+                      style={[styles.feeValue, { color: COLORS.success }]}
+                      adjustsFontSizeToFit={true}
+                      numberOfLines={1}
+                      minimumFontScale={0.7}
+                    >
+                      ₹{selectedPaymentDetails.details.fee.paid_fees}
+                    </Text>
                   </View>
                   <View style={[styles.feeItem, styles.errorFee]}>
-                    <Text style={[styles.feeLabel, { color: COLORS.error }]}>Due Fees</Text>
-                    <Text style={[styles.feeValue, { color: COLORS.error }]}>₹{selectedPaymentDetails.details.fee.due_fees}</Text>
+                    <Text style={[styles.feeLabel, { color: COLORS.error }]}>
+                      Due Fees
+                    </Text>
+                    <Text
+                      style={[styles.feeValue, { color: COLORS.error }]}
+                      adjustsFontSizeToFit={true}
+                      numberOfLines={1}
+                      minimumFontScale={0.7}
+                    >
+                      ₹{selectedPaymentDetails.details.fee.due_fees}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -303,44 +345,92 @@ const PaymentHistoryScreen = ({ navigation }) => {
               {/* Payment History Card */}
               <View style={styles.detailCard}>
                 <View style={styles.detailCardHeader}>
-                  <Ionicons name="receipt-outline" size={20} color={COLORS.primary} />
-                  <Text style={styles.detailCardTitle}>Payment Transactions</Text>
+                  <Ionicons
+                    name="receipt-outline"
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.detailCardTitle}>
+                    Payment Transactions
+                  </Text>
                 </View>
-                {selectedPaymentDetails.details.payments && selectedPaymentDetails.details.payments.length > 0 ? (
-                  selectedPaymentDetails.details.payments.map((payment, index) => (
-                    <View key={index} style={styles.transactionCard}>
-                      <View style={styles.transactionHeader}>
-                        <Text style={styles.transactionNumber}>#{index + 1}</Text>
-                        <Text style={styles.transactionAmount}>₹{payment.amount || '0.00'}</Text>
+                {selectedPaymentDetails.details.payments &&
+                selectedPaymentDetails.details.payments.length > 0 ? (
+                  selectedPaymentDetails.details.payments.map(
+                    (payment, index) => (
+                      <View key={index} style={styles.transactionCard}>
+                        <View style={styles.transactionHeader}>
+                          <Text style={styles.transactionNumber}>
+                            #{index + 1}
+                          </Text>
+                          <Text style={styles.transactionAmount}>
+                            ₹{payment.amount || "0.00"}
+                          </Text>
+                        </View>
+                        <View style={styles.transactionDetails}>
+                          <View style={styles.transactionRow}>
+                            <Ionicons
+                              name="person-outline"
+                              size={14}
+                              color={COLORS.textSecondary}
+                            />
+                            <Text style={styles.transactionText}>
+                              Received By:{" "}
+                              {payment.received_by || "Not Specified"}
+                            </Text>
+                          </View>
+                          <View style={styles.transactionRow}>
+                            <Ionicons
+                              name="card-outline"
+                              size={14}
+                              color={COLORS.textSecondary}
+                            />
+                            <Text style={styles.transactionText}>
+                              Method: {payment.payment_method || "N/A"}
+                            </Text>
+                          </View>
+                          <View style={styles.transactionRow}>
+                            <Ionicons
+                              name={
+                                payment.payment_status === "Success"
+                                  ? "checkmark-circle-outline"
+                                  : "close-circle-outline"
+                              }
+                              size={14}
+                              color={
+                                payment.payment_status === "Success"
+                                  ? COLORS.success
+                                  : COLORS.error
+                              }
+                            />
+                            <Text style={styles.transactionText}>
+                              Status: {payment.payment_status || "Success"}
+                            </Text>
+                          </View>
+                          <View style={styles.transactionRow}>
+                            <Ionicons
+                              name="calendar-outline"
+                              size={14}
+                              color={COLORS.textSecondary}
+                            />
+                            <Text style={styles.transactionText}>
+                              Date: {formatDate(payment.payment_date)}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-                      <View style={styles.transactionDetails}>
-                        <View style={styles.transactionRow}>
-                          <Ionicons name="person-outline" size={14} color={COLORS.textSecondary} />
-                          <Text style={styles.transactionText}>Received By: {payment.received_by || 'Not Specified'}</Text>
-                        </View>
-                        <View style={styles.transactionRow}>
-                          <Ionicons name="card-outline" size={14} color={COLORS.textSecondary} />
-                          <Text style={styles.transactionText}>Method: {payment.payment_method || 'N/A'}</Text>
-                        </View>
-                        <View style={styles.transactionRow}>
-                          <Ionicons 
-                            name={payment.payment_status === 'Success' ? "checkmark-circle-outline" : "close-circle-outline"} 
-                            size={14} 
-                            color={payment.payment_status === 'Success' ? COLORS.success : COLORS.error} 
-                          />
-                          <Text style={styles.transactionText}>Status: {payment.payment_status || 'Success'}</Text>
-                        </View>
-                        <View style={styles.transactionRow}>
-                          <Ionicons name="calendar-outline" size={14} color={COLORS.textSecondary} />
-                          <Text style={styles.transactionText}>Date: {formatDate(payment.payment_date)}</Text>
-                        </View>
-                      </View>
-                    </View>
-                  ))
+                    )
+                  )
                 ) : (
                   <View style={styles.noTransactions}>
-                    <Ionicons name="receipt-outline" size={32} color={COLORS.disabled} />
-                    <Text style={styles.noTransactionsText}>No payment transactions found</Text>
+                    <Ionicons
+                      name="receipt-outline"
+                      size={32}
+                      color={COLORS.disabled}
+                    />
+                    <Text style={styles.noTransactionsText}>
+                      No payment transactions found
+                    </Text>
                   </View>
                 )}
               </View>
