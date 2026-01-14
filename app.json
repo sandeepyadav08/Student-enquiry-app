@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Student Enquiry App",
-    "slug": "student-enquiry-app",
+    "name": "Student Enquiry",
+    "slug": "student-enquiry",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "student-enquiry-app",
+    "scheme": "student-enquiry",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

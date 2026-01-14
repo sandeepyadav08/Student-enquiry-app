@@ -1,10 +1,10 @@
-# 🎓 Student Enquiry App
+# 🎓 Student Enquiry
 
 A robust, enterprise-ready mobile solution for educational institutions to streamline their admission pipeline. Built with **React Native** and **Expo**, this application provides a seamless experience for managing student leads and registrations.
 
 ---
 
-##  Core Features
+## Core Features
 
 ### 📋 Lead Management
 
@@ -52,8 +52,8 @@ Student-Enquiry/
 
 ## ⚙️ Getting Started
 
-
 ### Installation
+
 1.  **Install dependencies**
 
     ```bash
@@ -68,4 +68,5 @@ Student-Enquiry/
     ```
 
 ---
-Maintained and developed by Sandee Yadav — React Native Developer._
+
+Maintained and developed by Sandee Yadav — React Native Developer.\_
