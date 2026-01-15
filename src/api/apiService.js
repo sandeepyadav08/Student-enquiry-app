@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = "http://192.168.0.126:8080/api/student-enquiry";
+const BASE_URL = "https://anushka.dhavalhost.com/api/student-enquiry";
 
 class ApiService {
   constructor() {
@@ -121,13 +121,10 @@ class ApiService {
       formData.append("password", password);
       formData.append("app", "true");
 
-      const response = await fetch(
-        "http://192.168.0.126:8080/api/student-enquiry/login",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`${this.baseURL}/login`, {
+        method: "POST",
+        body: formData,
+      });
 
       const text = await response.text();
       const cleanText = this.cleanJsonString(text);
@@ -289,15 +286,20 @@ class ApiService {
   // Fees APIs
   async createFeesEntry(feesData) {
     const params = new URLSearchParams();
-    params.append('app', 'true');
-    params.append('registration_no', feesData.registrationNo || '');
-    params.append('fee_date', feesData.date instanceof Date ? feesData.date.toISOString().split('T')[0] : feesData.date || '');
-    params.append('paid_fees', feesData.paidFees || '');
-    params.append('paid_through', feesData.paidThrough || '');
-    params.append('received_by', feesData.receivedBy || '');
+    params.append("app", "true");
+    params.append("registration_no", feesData.registrationNo || "");
+    params.append(
+      "fee_date",
+      feesData.date instanceof Date
+        ? feesData.date.toISOString().split("T")[0]
+        : feesData.date || ""
+    );
+    params.append("paid_fees", feesData.paidFees || "");
+    params.append("paid_through", feesData.paidThrough || "");
+    params.append("received_by", feesData.receivedBy || "");
 
-    return this.makeRequest('/fee-payments', {
-      method: 'PUT',
+    return this.makeRequest("/fee-payments", {
+      method: "PUT",
       body: params,
     });
   }
