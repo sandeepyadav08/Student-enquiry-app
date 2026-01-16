@@ -34,6 +34,33 @@ class ApiService {
     }
   }
 
+  async getRememberedEmail() {
+    try {
+      return await SecureStore.getItemAsync("rememberedEmail");
+    } catch (error) {
+      console.error("Error getting remembered email:", error);
+      return null;
+    }
+  }
+
+  async setRememberedEmail(email) {
+    try {
+      await SecureStore.setItemAsync("rememberedEmail", email);
+      console.log("Email remembered:", email);
+    } catch (error) {
+      console.error("Error setting remembered email:", error);
+    }
+  }
+
+  async removeRememberedEmail() {
+    try {
+      await SecureStore.deleteItemAsync("rememberedEmail");
+      console.log("Remembered email removed");
+    } catch (error) {
+      console.error("Error removing remembered email:", error);
+    }
+  }
+
   cleanJsonString(text) {
     if (!text) return "";
     return text

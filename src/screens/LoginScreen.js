@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,17 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const { colors } = useTheme();
+  useEffect(() => {
+    loadRememberedEmail();
+  }, []);
+
+  const loadRememberedEmail = async () => {
+    const savedEmail = await ApiService.getRememberedEmail();
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -55,6 +66,13 @@ const LoginScreen = ({ navigation }) => {
         response.token
       ) {
         await ApiService.setToken(response.token);
+
+        if (rememberMe) {
+          await ApiService.setRememberedEmail(email);
+        } else {
+          await ApiService.removeRememberedEmail();
+        }
+
         navigation.replace("Main");
       } else {
         Alert.alert("Login Failed", "Invalid credentials or server error");
